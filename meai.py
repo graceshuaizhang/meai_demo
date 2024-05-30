@@ -1,5 +1,4 @@
 import streamlit as st
-import pycountry
 
 # Set up the page layout
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
@@ -25,6 +24,8 @@ if 'language' not in st.session_state:
     st.session_state.language = ''
 if 'page' not in st.session_state:
     st.session_state.page = 'main'
+if 'chatbot_messages' not in st.session_state:
+    st.session_state.chatbot_messages = []
 
 # Function to display the main page
 def main_page():
@@ -177,32 +178,119 @@ def main_page():
 
 # Function to display the results page
 def results_page():
-    st.markdown("## Your Travel Preferences")
-    st.write(f"Month of Travel: {st.session_state.travel_month}")
-    st.write(f"Number of Days: {st.session_state.travel_days}")
-    st.write(f"Preference: {st.session_state.preference}")
-    st.write(f"Specific Preference: {st.session_state.additional_preference}")
-    st.write(f'Budget: {st.session_state.budget}')
-    st.write(f'Prefer self-driving: {st.session_state.self_driving}')
-    st.write(f'Sensitive to weather: {st.session_state.weather}')
-    st.write(f'Tightness of schedule: {st.session_state.schedule}')
-    st.write(f'Your language: {st.session_state.language}')
+    
+    st.markdown("""
+        <style>
+            .css-1d391kg {
+                width: 250px !important;
+            }
+            .css-1e5imcs {
+                margin-left: 260px !important;
+            }
+            .explore-heading {
+                padding-top: 20px;
+                text-align: center;
+                margin-left: 50px; /* Add space before the word "Explore" */
+                font-size: 20pt;
+                font-weight: 600
+            }
+            .preference-heading {
+                font-size: 24pt;
+                font-weight: 800;
+            }
+            .sidebar-icons {
+                font-size: 24px;
+                margin-right: 10px;
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    """, unsafe_allow_html=True)
+    
+    # col1, col2 = st.columns([3, 2])
+    # with col1:
+    #     # Initialize chat messages history in session state
+    #     if "messages" not in st.session_state:
+    #         st.session_state.messages = [
+    #             {"role": "assistant", "content": "Hello! How can I help you today?"}
+    #         ]
+        
+        
+        
+    #     # Display the prior chat messages
+    #     for message in st.session_state.messages:
+    #         with st.chat_message(message["role"]):
+    #             st.write(message["content"])
+    #     response_placeholder = st.empty()
+    #     # Create a placeholder for the chat input box
+    #     chat_input_placeholder = st.empty()
 
-    if st.button("Go Back"):
-        st.session_state.page = "main"
-        st.rerun()
+    #     # Prompt for user input and save to chat history
+    #     if prompt := chat_input_placeholder.chat_input("Your question"):
+    #         st.session_state.messages.append({"role": "user", "content": prompt})
 
-# Sidebar layout
+    #     # If the last message is not from the assistant, generate a new response
+    #     if st.session_state.messages[-1]["role"] != "assistant":
+    #         with st.chat_message("assistant"):
+    #             with st.spinner("Thinking..."):
+    #                 user_message = st.session_state.messages[-1]["content"]
+    #                 response = generate_chatbot_response(user_message)
+    #                 response_placeholder.write(response)
+    #                 st.session_state.messages.append({"role": "assistant", "content": response})
 
-#with st.sidebar:
-    #st.markdown("## MEAI (Beta)")
-    #st.button("Chats")
-    #st.button("Notifications")
-    #st.button("Likes")
-    #st.button("Up Next")
-    #st.button("Explore")
-    #st.button("Create")
-    #st.button("New Chat")
+        
+
+
+
+    # Initialize chat messages history in session state
+    if "messages" not in st.session_state:
+        st.session_state.messages = [
+            {"role": "assistant", "content": "Based on your preferences, needs and constraints, here are the best destinations:\n1. Swiss Alps [95]\n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?"}
+        ]
+    
+    # Prompt for user input and save to chat history
+    if prompt := st.chat_input("Your question"):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+
+    # Display the prior chat messages
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.write(message["content"])
+
+    
+
+    # If the last message is not from the assistant, generate a new response
+    if st.session_state.messages[-1]["role"] != "assistant":
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                user_message = st.session_state.messages[-1]["content"]
+                response = generate_chatbot_response(user_message)
+                st.write(response)
+                st.session_state.messages.append({"role": "assistant", "content": response})
+        
+        
+
+
+
+    # with pics_column:
+    #     st.markdown("## Your Travel Preferences")
+    #     st.write(f"Month of Travel: {st.session_state.travel_month}")
+    #     st.write(f"Number of Days: {st.session_state.travel_days}")
+    #     st.write(f"Preference: {st.session_state.preference}")
+    #     st.write(f"Specific Preference: {st.session_state.additional_preference}")
+    #     st.write(f'Budget: {st.session_state.budget}')
+    #     st.write(f'Prefer self-driving: {st.session_state.self_driving}')
+    #     st.write(f'Sensitive to weather: {st.session_state.weather}')
+    #     st.write(f'Tightness of schedule: {st.session_state.schedule}')
+    #     st.write(f'Your language: {st.session_state.language}')
+
+    #     if st.button("Go Back"):
+    #         st.session_state.page = "main"
+    #         st.rerun()
+
+def generate_chatbot_response(user_input):
+    # Call LLM here
+    # dummy response for now
+    return "This is a sample chatbot response to your message: " + user_input
 
 with st.sidebar:
     st.markdown("## MEAI (Beta)")
