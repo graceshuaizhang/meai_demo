@@ -1,7 +1,13 @@
 import streamlit as st
+from streamlit_float import *
+import random
+import time
 
 # Set up the page layout
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
+# st.title("MEAI (Beta)")
+
+
 
 # Initialize session state variables
 if 'travel_month' not in st.session_state:
@@ -176,9 +182,13 @@ def main_page():
             st.image("images/pic3.jpg", caption="Grand Rapids", use_column_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
+def chat_content():
+    if "prompt" in st.session_state:
+        st.session_state.prompt = st.session_state.prompt
 # Function to display the results page
 def results_page():
-    
+    float_init(theme=True, include_unstable_primary=False) # to make the chatbot input text goes down
+
     st.markdown("""
         <style>
             .css-1d391kg {
@@ -205,71 +215,83 @@ def results_page():
         </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     """, unsafe_allow_html=True)
-    
-    # col1, col2 = st.columns([3, 2])
-    # with col1:
-    #     # Initialize chat messages history in session state
-    #     if "messages" not in st.session_state:
-    #         st.session_state.messages = [
-    #             {"role": "assistant", "content": "Hello! How can I help you today?"}
-    #         ]
-        
-        
-        
-    #     # Display the prior chat messages
-    #     for message in st.session_state.messages:
-    #         with st.chat_message(message["role"]):
-    #             st.write(message["content"])
-    #     response_placeholder = st.empty()
-    #     # Create a placeholder for the chat input box
-    #     chat_input_placeholder = st.empty()
-
-    #     # Prompt for user input and save to chat history
-    #     if prompt := chat_input_placeholder.chat_input("Your question"):
-    #         st.session_state.messages.append({"role": "user", "content": prompt})
-
-    #     # If the last message is not from the assistant, generate a new response
-    #     if st.session_state.messages[-1]["role"] != "assistant":
-    #         with st.chat_message("assistant"):
-    #             with st.spinner("Thinking..."):
-    #                 user_message = st.session_state.messages[-1]["content"]
-    #                 response = generate_chatbot_response(user_message)
-    #                 response_placeholder.write(response)
-    #                 st.session_state.messages.append({"role": "assistant", "content": response})
 
         
 
+    col1, col2 = st.columns([3, 2])
+    with col2:
+        #st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
+        #st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
+        #st.markdown("### Explore destinations")
+        st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
+
+        st.markdown("""
+            <style>
+            .column-padding {
+                padding-top: 50px !important;
+            }
+            .main-image {
+                width: 100%;
+                height: 300px;
+                object-fit: cover;
+                border-radius: 10px;
+                margin-bottom: 20px;
+            }
+            .small-images-container {
+                display: flex;
+                justify-content: space-between;
+                gap: 20px;
+            }
+            .small-image {
+                width: 48%;
+                height: 200px;
+                object-fit: cover;
+                border-radius: 10px;
+            }
+            
+            </style>
+            """, unsafe_allow_html=True)
+        st.markdown('<div class="column-padding">', unsafe_allow_html=True)
+        #st.markdown(unsafe_allow_html=True)
+        st.image("images/swisAlps.jpg", caption="swis Alps", use_column_width=True, output_format="auto")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown("<div class='small-images-container'>", unsafe_allow_html=True)
+        col3, col4 = st.columns(2)
+        with col3:
+            st.image("images/CanadianRockies.jpg", caption="Canadian Rockies", use_column_width=True)
+        with col4:
+            st.image("images/Patagonia.jpg", caption="Patagonia", use_column_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+            
+ 
+
+    if 'contents' not in st.session_state:
+        st.session_state['contents'] = [("robot", "Based on your preferences, needs and constraints, here are the best destinations:\n1. Swiss Alps [95]\n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?")
+]
 
 
-    # Initialize chat messages history in session state
-    if "messages" not in st.session_state:
-        st.session_state.messages = [
-            {"role": "assistant", "content": "Based on your preferences, needs and constraints, here are the best destinations:\n1. Swiss Alps [95]\n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?"}
-        ]
-    
-    # Prompt for user input and save to chat history
-    if prompt := st.chat_input("Your question"):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-
-    # Display the prior chat messages
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.write(message["content"])
-
-    
-
-    # If the last message is not from the assistant, generate a new response
-    if st.session_state.messages[-1]["role"] != "assistant":
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                user_message = st.session_state.messages[-1]["content"]
-                response = generate_chatbot_response(user_message)
-                st.write(response)
-                st.session_state.messages.append({"role": "assistant", "content": response})
-        
-        
-
-
+    with col1:
+        with st.container(border=True):
+            with st.container():
+                st.chat_input(key='content', on_submit=chat_content) 
+                button_b_pos = "0rem"
+                button_css = float_css_helper(width="2.2rem", bottom=button_b_pos, transition=0)
+                float_parent(css=button_css)
+            
+            if st.session_state.contents:
+                for role, content in st.session_state.contents:
+                    if role == 'user':
+                        with st.chat_message(name='User', avatar='👤'):
+                            st.write(content)
+                    elif role == 'robot':
+                        
+                        if content == st.session_state.contents[-1][1] and len(st.session_state['contents']) > 1: 
+                            st.write_stream(stream_the_text(content))
+                        else:
+                            st.write(content)
+                            
 
     # with pics_column:
     #     st.markdown("## Your Travel Preferences")
@@ -287,11 +309,31 @@ def results_page():
     #         st.session_state.page = "main"
     #         st.rerun()
 
+def chat_content():
+    user_message = st.session_state.content
+    st.session_state['contents'].append(('user', user_message))
+    chatbot_response = "This is what you sent: " + user_message
+    st.session_state['contents'].append(('robot', chatbot_response))
+    
 def generate_chatbot_response(user_input):
     # Call LLM here
     # dummy response for now
-    return "This is a sample chatbot response to your message: " + user_input
 
+    response = random.choice(
+        [
+            "Hello there! How can I assist you today?",
+            "Hi, human! Is there anything I can help you with?",
+            "Do you need help?",
+        ]
+    )
+    for word in response.split():
+        yield word + " "
+        time.sleep(0.05)
+
+def stream_the_text(text):
+    for word in text.split():
+        yield word + " "
+        time.sleep(0.05)
 with st.sidebar:
     st.markdown("## MEAI (Beta)")
     st.markdown('<button class="sidebar-icons"><i class="fas fa-comments"></i></button> Chats', unsafe_allow_html=True)
