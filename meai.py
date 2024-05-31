@@ -287,10 +287,12 @@ def results_page():
                             st.write(content)
                     elif role == 'robot':
                         
-                        if content == st.session_state.contents[-1][1] and len(st.session_state['contents']) > 1: 
-                            st.write_stream(stream_the_text(content))
+                        if content == st.session_state.contents[-1][1] and len(st.session_state['contents']) > 1:
+                            with st.chat_message(name='MEAI', avatar='🤖'): 
+                                st.write_stream(stream_the_text(content))
                         else:
-                            st.write(content)
+                            with st.chat_message(name='MEAI', avatar='🤖'):
+                                st.write(content)
                             
 
     # with pics_column:
