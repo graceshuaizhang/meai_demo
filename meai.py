@@ -8,7 +8,6 @@ st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 # st.title("MEAI (Beta)")
 
 
-
 # Initialize session state variables
 if 'travel_month' not in st.session_state:
     st.session_state.travel_month = ''
@@ -32,6 +31,7 @@ if 'page' not in st.session_state:
     st.session_state.page = 'main'
 if 'chatbot_messages' not in st.session_state:
     st.session_state.chatbot_messages = []
+
 
 # Function to display the main page
 def main_page():
@@ -66,15 +66,14 @@ def main_page():
     col1, col2 = st.columns([3, 3])
 
     with col1:
-        #st.markdown("### Your preference for this trip")
+        # st.markdown("### Your preference for this trip")
         st.markdown('<div class="preference-heading">Your preference for this trip</div>', unsafe_allow_html=True)
 
-        
         travel_month = st.selectbox("Which month do you plan to travel?", [
-            "January", "February", "March", "April", "May", "June", 
+            "January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"
         ])
-        
+
         travel_days = st.number_input("For how many days?",
                                       min_value=1, max_value=31, step=1)
 
@@ -94,15 +93,15 @@ def main_page():
         budget = st.number_input("How much is your budget?",
                                  min_value=10, max_value=100000, step=1)
 
-        self_driving = st.number_input('Do you prefer self-driving? ' +\
+        self_driving = st.number_input('Do you prefer self-driving? ' + \
                                        '0: not prefer at all, 10: extremely prefer.',
                                        min_value=0, max_value=10, step=1)
 
-        weather = st.number_input('Are you sensitive to weather?' +\
+        weather = st.number_input('Are you sensitive to weather?' + \
                                   '0: insensitive, 10: very sensitive.',
                                   min_value=0, max_value=10, step=1)
 
-        schedule = st.number_input('Do you prefer a tight or loose schedule? ' +\
+        schedule = st.number_input('Do you prefer a tight or loose schedule? ' + \
                                    '0: very loose, 10：very tight.',
                                    min_value=0, max_value=10, step=1)
 
@@ -136,11 +135,10 @@ def main_page():
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-
     with col2:
-        #st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
-        #st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
-        #st.markdown("### Explore destinations")
+        # st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
+        # st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
+        # st.markdown("### Explore destinations")
         st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
 
         st.markdown("""
@@ -166,11 +164,11 @@ def main_page():
                 object-fit: cover;
                 border-radius: 10px;
             }
-            
+
             </style>
             """, unsafe_allow_html=True)
         st.markdown('<div class="column-padding">', unsafe_allow_html=True)
-        #st.markdown(unsafe_allow_html=True)
+        # st.markdown(unsafe_allow_html=True)
         st.image("images/pic1.jpg", caption="Horseshoe Bend", use_column_width=True, output_format="auto")
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -182,12 +180,15 @@ def main_page():
             st.image("images/pic3.jpg", caption="Grand Rapids", use_column_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
+
 def chat_content():
     if "prompt" in st.session_state:
         st.session_state.prompt = st.session_state.prompt
+
+
 # Function to display the results page
 def results_page():
-    float_init(theme=True, include_unstable_primary=False) # to make the chatbot input text goes down
+    float_init(theme=True, include_unstable_primary=False)  # to make the chatbot input text goes down
 
     st.markdown("""
         <style>
@@ -216,13 +217,11 @@ def results_page():
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     """, unsafe_allow_html=True)
 
-        
-
     col1, col2 = st.columns([3, 2])
     with col2:
-        #st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
-        #st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
-        #st.markdown("### Explore destinations")
+        # st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
+        # st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
+        # st.markdown("### Explore destinations")
         st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
 
         st.markdown("""
@@ -248,11 +247,11 @@ def results_page():
                 object-fit: cover;
                 border-radius: 10px;
             }
-            
+
             </style>
             """, unsafe_allow_html=True)
         st.markdown('<div class="column-padding">', unsafe_allow_html=True)
-        #st.markdown(unsafe_allow_html=True)
+        # st.markdown(unsafe_allow_html=True)
         st.image("images/swisAlps.jpg", caption="swis Alps", use_column_width=True, output_format="auto")
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -264,36 +263,32 @@ def results_page():
             st.image("images/Patagonia.jpg", caption="Patagonia", use_column_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-            
- 
-
     if 'contents' not in st.session_state:
-        st.session_state['contents'] = [("robot", "Based on your preferences, needs and constraints, here are the best destinations:\n1. Swiss Alps [95]\n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?")
-]
-
+        st.session_state['contents'] = [("robot",
+                                         "Based on your preferences, needs and constraints, here are the best destinations:\n1. Swiss Alps [95]\n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?")
+                                        ]
 
     with col1:
         with st.container(border=True):
             with st.container():
-                st.chat_input(key='content', on_submit=chat_content) 
+                st.chat_input(key='content', on_submit=chat_content)
                 button_b_pos = "0rem"
                 button_css = float_css_helper(width="2.2rem", bottom=button_b_pos, transition=0)
                 float_parent(css=button_css)
-            
+
             if st.session_state.contents:
                 for role, content in st.session_state.contents:
                     if role == 'user':
                         with st.chat_message(name='User', avatar='👤'):
                             st.write(content)
                     elif role == 'robot':
-                        
+
                         if content == st.session_state.contents[-1][1] and len(st.session_state['contents']) > 1:
-                            with st.chat_message(name='MEAI', avatar='🤖'): 
+                            with st.chat_message(name='MEAI', avatar='🤖'):
                                 st.write_stream(stream_the_text(content))
                         else:
                             with st.chat_message(name='MEAI', avatar='🤖'):
                                 st.write(content)
-                            
 
     # with pics_column:
     #     st.markdown("## Your Travel Preferences")
@@ -311,12 +306,14 @@ def results_page():
     #         st.session_state.page = "main"
     #         st.rerun()
 
+
 def chat_content():
     user_message = st.session_state.content
     st.session_state['contents'].append(('user', user_message))
     chatbot_response = "This is what you sent: " + user_message
     st.session_state['contents'].append(('robot', chatbot_response))
-    
+
+
 def generate_chatbot_response(user_input):
     # Call LLM here
     # dummy response for now
@@ -332,19 +329,26 @@ def generate_chatbot_response(user_input):
         yield word + " "
         time.sleep(0.05)
 
+
 def stream_the_text(text):
     for word in text.split():
         yield word + " "
         time.sleep(0.05)
+
+
 with st.sidebar:
     st.markdown("## MEAI (Beta)")
     st.markdown('<button class="sidebar-icons"><i class="fas fa-comments"></i></button> Chats', unsafe_allow_html=True)
-    st.markdown('<button class="sidebar-icons"><i class="fas fa-bell"></i></button> Notifications', unsafe_allow_html=True)
+    st.markdown('<button class="sidebar-icons"><i class="fas fa-bell"></i></button> Notifications',
+                unsafe_allow_html=True)
     st.markdown('<button class="sidebar-icons"><i class="fas fa-thumbs-up"></i></button> Likes', unsafe_allow_html=True)
-    st.markdown('<button class="sidebar-icons"><i class="fas fa-arrow-circle-up"></i></button> Up Next', unsafe_allow_html=True)
+    st.markdown('<button class="sidebar-icons"><i class="fas fa-arrow-circle-up"></i></button> Up Next',
+                unsafe_allow_html=True)
     st.markdown('<button class="sidebar-icons"><i class="fas fa-search"></i></button> Explore', unsafe_allow_html=True)
-    st.markdown('<button class="sidebar-icons"><i class="fas fa-plus-circle"></i></button> Create', unsafe_allow_html=True)
-    st.markdown('<button class="sidebar-icons"><i class="fas fa-comment-alt"></i></button> New Chat', unsafe_allow_html=True)
+    st.markdown('<button class="sidebar-icons"><i class="fas fa-plus-circle"></i></button> Create',
+                unsafe_allow_html=True)
+    st.markdown('<button class="sidebar-icons"><i class="fas fa-comment-alt"></i></button> New Chat',
+                unsafe_allow_html=True)
 
 # Main content layout
 if st.session_state.page == "main":
