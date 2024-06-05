@@ -282,7 +282,7 @@ def results_page():
 def chat_content():
     user_message = st.session_state.content
     st.session_state['contents'].append(('user', user_message))
-    chatbot_response = "This is what you sent: " + user_message
+    chatbot_response = "This is what you sent:" + user_message
     st.session_state['contents'].append(('robot', chatbot_response))
 
 
