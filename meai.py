@@ -240,66 +240,56 @@ def results_page():
                                          "Based on your preferences, needs and constraints, here are the best destinations:\n1. Swiss Alps [95]\n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?")
                                         ]
 
+    # with col1:
+    #     with st.container(border=True):
+    #         with st.container():
+    #             st.chat_input(key='content', on_submit=chat_content)
+    #             button_b_pos = "0rem"
+    #             button_css = float_css_helper(width="2.2rem", bottom=button_b_pos, transition=0)
+    #             float_parent(css=button_css)
+    #
+    #         if st.session_state.contents:
+    #             for role, content in st.session_state.contents:
+    #                 if role == 'user':
+    #                     with st.chat_message(name='User', avatar='👤'):
+    #                         st.write(content)
+    #                 elif role == 'robot':
+    #
+    #                     if content == st.session_state.contents[-1][1] and len(st.session_state['contents']) > 1:
+    #                         with st.chat_message(name='MEAI', avatar='🤖'):
+    #                             st.write_stream(stream_the_text(content))
+    #                     else:
+    #                         with st.chat_message(name='MEAI', avatar='🤖'):
+    #                             st.write(content)
+
     with col1:
-        with st.container(border=True):
-            with st.container():
-                st.chat_input(key='content', on_submit=chat_content)
-                button_b_pos = "0rem"
-                button_css = float_css_helper(width="2.2rem", bottom=button_b_pos, transition=0)
-                float_parent(css=button_css)
+        for role, content in st.session_state['contents']:
+            if role == 'user':
+                with st.chat_message(name='User', avatar='👤'):
+                    st.write(content)
+            elif role == 'robot':
+                if content == "VIDEO_RESPONSE":
+                    st.video("https://www.youtube.com/watch?v=_88XGkSaWos")
+                else:
+                    st.write(content)
 
-            if st.session_state.contents:
-                for role, content in st.session_state.contents:
-                    if role == 'user':
-                        with st.chat_message(name='User', avatar='👤'):
-                            st.write(content)
-                    elif role == 'robot':
-
-                        if content == st.session_state.contents[-1][1] and len(st.session_state['contents']) > 1:
-                            with st.chat_message(name='MEAI', avatar='🤖'):
-                                st.write_stream(stream_the_text(content))
-                        else:
-                            with st.chat_message(name='MEAI', avatar='🤖'):
-                                st.write(content)
-
-    # with pics_column:
-    #     st.markdown("## Your Travel Preferences")
-    #     st.write(f"Month of Travel: {st.session_state.travel_month}")
-    #     st.write(f"Number of Days: {st.session_state.travel_days}")
-    #     st.write(f"Preference: {st.session_state.preference}")
-    #     st.write(f"Specific Preference: {st.session_state.additional_preference}")
-    #     st.write(f'Budget: {st.session_state.budget}')
-    #     st.write(f'Prefer self-driving: {st.session_state.self_driving}')
-    #     st.write(f'Sensitive to weather: {st.session_state.weather}')
-    #     st.write(f'Tightness of schedule: {st.session_state.schedule}')
-    #     st.write(f'Your language: {st.session_state.language}')
-
-    #     if st.button("Go Back"):
-    #         st.session_state.page = "main"
-    #         st.rerun()
-
+        if prompt := st.chat_input("Your question"):
+            st.session_state['contents'].append(('user', prompt))
+            chatbot_response = generate_chatbot_response(prompt)
+            st.session_state['contents'].append(('robot', chatbot_response))
+            st.experimental_rerun()
 
 def chat_content():
     user_message = st.session_state.content
     st.session_state['contents'].append(('user', user_message))
-    chatbot_response = "This is what you sent:" + user_message
+    chatbot_response = generate_chatbot_response(user_message)
     st.session_state['contents'].append(('robot', chatbot_response))
 
-
 def generate_chatbot_response(user_input):
-    # Call LLM here
-    # dummy response for now
-
-    response = random.choice(
-        [
-            "Hello there! How can I assist you today?",
-            "Hi, human! Is there anything I can help you with?",
-            "Do you need help?",
-        ]
-    )
-    for word in response.split():
-        yield word + " "
-        time.sleep(0.05)
+    if user_input.lower() == "why":
+        return "VIDEO_RESPONSE"
+    else:
+        return "This is what you sent: " + user_input
 
 
 def stream_the_text(text):
