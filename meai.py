@@ -1,14 +1,10 @@
 import streamlit as st
 from streamlit_float import *
-from streamlit_folium import st_folium
-import folium
 import random
 import time
 
 # Set up the page layout
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
-# st.title("MEAI (Beta)")
-
 
 # Initialize session state variables
 if 'travel_month' not in st.session_state:
@@ -34,10 +30,6 @@ if 'page' not in st.session_state:
 if 'chatbot_messages' not in st.session_state:
     st.session_state.chatbot_messages = []
 
-famous_sites = {
-    "Matterhorn Glacier Paradise": [45.9763, 7.6586],
-    # Add more sites here if needed
-}
 # Function to display the main page
 def main_page():
     st.markdown("""
@@ -140,55 +132,27 @@ def main_page():
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    with col2:
-        # st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
-        # st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
-        # st.markdown("### Explore destinations")
-        st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
-
-        st.markdown("""
-            <style>
-            .column-padding {
-                padding-top: 50px !important;
-            }
-            .main-image {
-                width: 100%;
-                height: 300px;
-                object-fit: cover;
-                border-radius: 10px;
-                margin-bottom: 20px;
-            }
-            .small-images-container {
-                display: flex;
-                justify-content: space-between;
-                gap: 20px;
-            }
-            .small-image {
-                width: 48%;
-                height: 200px;
-                object-fit: cover;
-                border-radius: 10px;
-            }
-
-            </style>
-            """, unsafe_allow_html=True)
-        st.markdown('<div class="column-padding">', unsafe_allow_html=True)
-        # st.markdown(unsafe_allow_html=True)
-        st.image("images/pic1.jpg", caption="Horseshoe Bend", use_column_width=True, output_format="auto")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown("<div class='small-images-container'>", unsafe_allow_html=True)
-        col3, col4 = st.columns(2)
-        with col3:
-            st.image("images/pic2.jpg", caption="Santa Monica Pier", use_column_width=True)
-        with col4:
-            st.image("images/pic3.jpg", caption="Grand Rapids", use_column_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
 
 def chat_content():
-    if "prompt" in st.session_state:
-        st.session_state.prompt = st.session_state.prompt
+    user_message = st.session_state.content
+    st.session_state['contents'].append(('user', user_message))
+    chatbot_response = generate_chatbot_response(user_message)
+    st.session_state['contents'].append(('robot', chatbot_response))
+
+
+def generate_chatbot_response(user_input):
+    if user_input.lower() == "why":
+        return '<div style="display: flex; flex-direction: row; align-items: center;"><div style="flex: 1;">one</div><div style="flex: 1;"><iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>'
+    elif user_input.lower() == "plan":
+        return "two"
+    else:
+        return "This is what you sent: " + user_input
+
+
+def stream_the_text(text):
+    for word in text.split():
+        yield word + " "
+        time.sleep(0.05)
 
 
 # Function to display the results page
@@ -222,97 +186,37 @@ def results_page():
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns([3, 2])
-    with col2:
-        st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
-
-        m = folium.Map(location=[46.8182, 8.2275], zoom_start=8)
-        for site, coordinates in famous_sites.items():
-            folium.Marker(
-                location=coordinates,
-                popup=f'<b style="font-size:16px;">{site}</b>'
-            ).add_to(m)
-
-        st_folium(m, width=700, height=500)
+    col1 = st.columns([1])[0]
 
     if 'contents' not in st.session_state:
         st.session_state['contents'] = [("robot",
                                          "Based on your preferences, needs and constraints, here are the best destinations:\n1. Swiss Alps [95]\n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?")
                                         ]
 
-    # with col1:
-    #     with st.container(border=True):
-    #         with st.container():
-    #             st.chat_input(key='content', on_submit=chat_content)
-    #             button_b_pos = "0rem"
-    #             button_css = float_css_helper(width="2.2rem", bottom=button_b_pos, transition=0)
-    #             float_parent(css=button_css)
-    #
-    #         if st.session_state.contents:
-    #             for role, content in st.session_state.contents:
-    #                 if role == 'user':
-    #                     with st.chat_message(name='User', avatar='👤'):
-    #                         st.write(content)
-    #                 elif role == 'robot':
-    #
-    #                     if content == st.session_state.contents[-1][1] and len(st.session_state['contents']) > 1:
-    #                         with st.chat_message(name='MEAI', avatar='🤖'):
-    #                             st.write_stream(stream_the_text(content))
-    #                     else:
-    #                         with st.chat_message(name='MEAI', avatar='🤖'):
-    #                             st.write(content)
-
     with col1:
-        for role, content in st.session_state['contents']:
-            if role == 'user':
-                with st.chat_message(name='User', avatar='👤'):
-                    st.write(content)
-            elif role == 'robot':
-                if content == "VIDEO_RESPONSE":
-                    st.write("Here's a video to explain:")
-                    st.video("https://www.youtube.com/watch?v=_88XGkSaWos")
-                    st.write("Above is my explanation.")
-                else:
-                    st.write(content)
+        with st.container(border=True):
+            for role, content in st.session_state.contents:
+                if role == 'user':
+                    with st.chat_message(name='User', avatar='👤'):
+                        st.write(content)
+                elif role == 'robot':
+                    if content.startswith('<div'):
+                        st.components.v1.html(content, height=380)
+                    else:
+                        with st.chat_message(name='MEAI', avatar='🤖'):
+                            st.write(content)
 
-        if prompt := st.chat_input("Your question"):
-            st.session_state['contents'].append(('user', prompt))
-            chatbot_response = generate_chatbot_response(prompt)
-            st.session_state['contents'].append(('robot', chatbot_response))
-            st.rerun()
-
-def chat_content():
-    user_message = st.session_state.content
-    st.session_state['contents'].append(('user', user_message))
-    chatbot_response = generate_chatbot_response(user_message)
-    st.session_state['contents'].append(('robot', chatbot_response))
-
-def generate_chatbot_response(user_input):
-    if user_input.lower() == "why":
-        return "VIDEO_RESPONSE"
-    else:
-        return "This is what you sent: " + user_input
-
-
-def stream_the_text(text):
-    for word in text.split():
-        yield word + " "
-        time.sleep(0.05)
-
+            st.chat_input(key='content', on_submit=chat_content)
 
 with st.sidebar:
     st.markdown("## MEAI (Beta)")
     st.markdown('<button class="sidebar-icons"><i class="fas fa-comments"></i></button> Chats', unsafe_allow_html=True)
-    st.markdown('<button class="sidebar-icons"><i class="fas fa-bell"></i></button> Notifications',
-                unsafe_allow_html=True)
+    st.markdown('<button class="sidebar-icons"><i class="fas fa-bell"></i></button> Notifications', unsafe_allow_html=True)
     st.markdown('<button class="sidebar-icons"><i class="fas fa-thumbs-up"></i></button> Likes', unsafe_allow_html=True)
-    st.markdown('<button class="sidebar-icons"><i class="fas fa-arrow-circle-up"></i></button> Up Next',
-                unsafe_allow_html=True)
+    st.markdown('<button class="sidebar-icons"><i class="fas fa-arrow-circle-up"></i></button> Up Next', unsafe_allow_html=True)
     st.markdown('<button class="sidebar-icons"><i class="fas fa-search"></i></button> Explore', unsafe_allow_html=True)
-    st.markdown('<button class="sidebar-icons"><i class="fas fa-plus-circle"></i></button> Create',
-                unsafe_allow_html=True)
-    st.markdown('<button class="sidebar-icons"><i class="fas fa-comment-alt"></i></button> New Chat',
-                unsafe_allow_html=True)
+    st.markdown('<button class="sidebar-icons"><i class="fas fa-plus-circle"></i></button> Create', unsafe_allow_html=True)
+    st.markdown('<button class="sidebar-icons"><i class="fas fa-comment-alt"></i></button> New Chat', unsafe_allow_html=True)
 
 # Main content layout
 if st.session_state.page == "main":
