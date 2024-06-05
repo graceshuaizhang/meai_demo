@@ -1,5 +1,7 @@
 import streamlit as st
 from streamlit_float import *
+from streamlit_folium import st_folium
+import folium
 import random
 import time
 
@@ -32,7 +34,10 @@ if 'page' not in st.session_state:
 if 'chatbot_messages' not in st.session_state:
     st.session_state.chatbot_messages = []
 
-
+famous_sites = {
+    "Matterhorn Glacier Paradise": [45.9763, 7.6586],
+    # Add more sites here if needed
+}
 # Function to display the main page
 def main_page():
     st.markdown("""
@@ -219,49 +224,16 @@ def results_page():
 
     col1, col2 = st.columns([3, 2])
     with col2:
-        # st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
-        # st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
-        # st.markdown("### Explore destinations")
         st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
 
-        st.markdown("""
-            <style>
-            .column-padding {
-                padding-top: 50px !important;
-            }
-            .main-image {
-                width: 100%;
-                height: 300px;
-                object-fit: cover;
-                border-radius: 10px;
-                margin-bottom: 20px;
-            }
-            .small-images-container {
-                display: flex;
-                justify-content: space-between;
-                gap: 20px;
-            }
-            .small-image {
-                width: 48%;
-                height: 200px;
-                object-fit: cover;
-                border-radius: 10px;
-            }
+        m = folium.Map(location=[46.8182, 8.2275], zoom_start=8)
+        for site, coordinates in famous_sites.items():
+            folium.Marker(
+                location=coordinates,
+                popup=f'<b style="font-size:16px;">{site}</b>'
+            ).add_to(m)
 
-            </style>
-            """, unsafe_allow_html=True)
-        st.markdown('<div class="column-padding">', unsafe_allow_html=True)
-        # st.markdown(unsafe_allow_html=True)
-        st.image("images/swisAlps.jpg", caption="swis Alps", use_column_width=True, output_format="auto")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown("<div class='small-images-container'>", unsafe_allow_html=True)
-        col3, col4 = st.columns(2)
-        with col3:
-            st.image("images/CanadianRockies.jpg", caption="Canadian Rockies", use_column_width=True)
-        with col4:
-            st.image("images/Patagonia.jpg", caption="Patagonia", use_column_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st_folium(m, width=700, height=500)
 
     if 'contents' not in st.session_state:
         st.session_state['contents'] = [("robot",
