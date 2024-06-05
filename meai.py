@@ -269,7 +269,9 @@ def results_page():
                     st.write(content)
             elif role == 'robot':
                 if content == "VIDEO_RESPONSE":
+                    st.write("Here's a video to explain:")
                     st.video("https://www.youtube.com/watch?v=_88XGkSaWos")
+                    st.write("Above is my explanation.")
                 else:
                     st.write(content)
 
@@ -277,7 +279,7 @@ def results_page():
             st.session_state['contents'].append(('user', prompt))
             chatbot_response = generate_chatbot_response(prompt)
             st.session_state['contents'].append(('robot', chatbot_response))
-            st.experimental_rerun()
+            st.rerun()
 
 def chat_content():
     user_message = st.session_state.content
