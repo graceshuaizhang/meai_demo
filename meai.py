@@ -9,9 +9,6 @@ import re
 
 # Set up the page layout
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
-# st.title("MEAI (Beta)")
-
-
 
 # Initialize session state variables
 if 'travel_month' not in st.session_state:
@@ -20,7 +17,7 @@ if 'travel_days' not in st.session_state:
     st.session_state.travel_days = 0
 if 'preference' not in st.session_state:
     st.session_state.preference = ''
-if 'additional_question' not in st.session_state:
+if 'additional_preference' not in st.session_state:
     st.session_state.additional_preference = ''
 if 'budget' not in st.session_state:
     st.session_state.budget = 10000
@@ -50,51 +47,44 @@ gmaps = googlemaps.Client(key=google_maps_api_key)
 # Function to display the main page
 def main_page():
     st.markdown("""
-            <style>
-                .css-1d391kg {
-                    width: 250px !important;
-                }
-                .css-1e5imcs {
-                    margin-left: 260px !important;
-                }
-                .explore-heading {
-                    padding-top: 20px;
-                    text-align: center;
-                    margin-left: 50px; /* Add space before the word "Explore" */
-                    font-size: 20pt;
-                    font-weight: 600
-                }
-                .preference-heading {
-                    font-size: 24pt;
-                    font-weight: 800;
-                }
-                .sidebar-icons {
-                    font-size: 24px;
-                    margin-right: 10px;
-                }
-            </style>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-
-        """, unsafe_allow_html=True)
+        <style>
+            .css-1d391kg {
+                width: 250px !important;
+            }
+            .css-1e5imcs {
+                margin-left: 260px !important;
+            }
+            .explore-heading {
+                padding-top: 20px;
+                text-align: center;
+                margin-left: 50px; /* Add space before the word "Explore" */
+                font-size: 20pt;
+                font-weight: 600
+            }
+            .preference-heading {
+                font-size: 24pt;
+                font-weight: 800;
+            }
+            .sidebar-icons {
+                font-size: 24px;
+                margin-right: 10px;
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    """, unsafe_allow_html=True)
 
     col1, col2 = st.columns([3, 3])
 
     with col1:
-        #st.markdown("### Your preference for this trip")
         st.markdown('<div class="preference-heading">Your preference for this trip</div>', unsafe_allow_html=True)
 
-        
         travel_month = st.selectbox("Which month do you plan to travel?", [
-            "January", "February", "March", "April", "May", "June", 
+            "January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"
         ])
-        
-        travel_days = st.number_input("For how many days?",
-                                      min_value=1, max_value=31, step=1)
 
-        preference = st.selectbox("Do you prefer natural or cultural attractions?", [
-            "natural", "cultural"
-        ])
+        travel_days = st.number_input("For how many days?", min_value=1, max_value=31, step=1)
+        preference = st.selectbox("Do you prefer natural or cultural attractions?", ["natural", "cultural"])
 
         if preference == "natural":
             additional_preference = st.selectbox("What type of natural attractions do you prefer?",
@@ -105,38 +95,24 @@ def main_page():
                                                  ["historical", "museums", "ethnic neighbourhoods",
                                                   "festivals/events", 'others'])
 
-        budget = st.number_input("How much is your budget?",
-                                 min_value=10, max_value=100000, step=1)
-
-        self_driving = st.number_input('Do you prefer self-driving? ' +\
-                                       '0: not prefer at all, 10: extremely prefer.',
+        budget = st.number_input("How much is your budget?", min_value=10, max_value=100000, step=1)
+        self_driving = st.number_input('Do you prefer self-driving? 0: not prefer at all, 10: extremely prefer.',
                                        min_value=0, max_value=10, step=1)
-
-        weather = st.number_input('Are you sensitive to weather?' +\
-                                  '0: insensitive, 10: very sensitive.',
+        weather = st.number_input('Are you sensitive to weather? 0: insensitive, 10: very sensitive.',
                                   min_value=0, max_value=10, step=1)
-
-        schedule = st.number_input('Do you prefer a tight or loose schedule? ' +\
-                                   '0: very loose, 10：very tight.',
+        schedule = st.number_input('Do you prefer a tight or loose schedule? 0: very loose, 10：very tight.',
                                    min_value=0, max_value=10, step=1)
 
-        langs = ['English', 'Spanish', 'Chinese', 'Arabic', 'French', 'German',
-                 'Hindi', 'Portuguese', 'Bengali', 'Russian', 'Indonesian',
-                 'Turkish', 'Urdu', 'Japanese', 'Greek', 'Croatian', 'Korean',
-                 'Telugu', 'Malay', 'Italian', 'Romansh', 'Dutch', 'Polish',
-                 'Thai', 'Others']
+        langs = ['English', 'Spanish', 'Chinese', 'Arabic', 'French', 'German', 'Hindi', 'Portuguese', 'Bengali',
+                 'Russian', 'Indonesian', 'Turkish', 'Urdu', 'Japanese', 'Greek', 'Croatian', 'Korean', 'Telugu',
+                 'Malay', 'Italian', 'Romansh', 'Dutch', 'Polish', 'Thai', 'Others']
 
         language = st.selectbox("Which language do you speak?", langs)
 
         st.markdown('<div class="submit-button">', unsafe_allow_html=True)
-        if st.button("Submit", disabled=not (travel_month and travel_days and preference
-                                             and additional_preference and budget
-                                             and (0 <= self_driving <= 10)
-                                             and (0 <= weather <= 10)
-                                             and (0 <= schedule <= 10)
-                                             and language)
-
-                     ):
+        if st.button("Submit", disabled=not (travel_month and travel_days and preference and additional_preference
+                                             and budget and (0 <= self_driving <= 10) and (0 <= weather <= 10)
+                                             and (0 <= schedule <= 10) and language)):
             st.session_state.page = "results"
             st.session_state.travel_month = travel_month
             st.session_state.travel_days = travel_days
@@ -150,13 +126,8 @@ def main_page():
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-
     with col2:
-        #st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
-        #st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
-        #st.markdown("### Explore destinations")
         st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
-
         st.markdown("""
             <style>
             .column-padding {
@@ -180,11 +151,9 @@ def main_page():
                 object-fit: cover;
                 border-radius: 10px;
             }
-            
             </style>
-            """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
         st.markdown('<div class="column-padding">', unsafe_allow_html=True)
-        #st.markdown(unsafe_allow_html=True)
         st.image("images/pic1.jpg", caption="Horseshoe Bend", use_column_width=True, output_format="auto")
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -306,7 +275,7 @@ def stream_the_text(text):
 
 
 def results_page():
-    float_init(theme=True, include_unstable_primary=False) # to make the chatbot input text goes down
+    float_init(theme=True, include_unstable_primary=False)  # to make the chatbot input text goes down
 
     st.markdown("""
         <style>
@@ -331,17 +300,18 @@ def results_page():
                 font-size: 24px;
                 margin-right: 10px;
             }
+            .sticky {
+                position: -webkit-sticky;
+                position: sticky;
+                top: 0;
+            }
         </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     """, unsafe_allow_html=True)
 
-        
-
     col1, col2 = st.columns([3, 2])
     with col2:
-        #st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
-        #st.markdown('<div class="explore-padding">', unsafe_allow_html=True)
-        #st.markdown("### Explore destinations")
+        st.markdown('<div class="sticky">', unsafe_allow_html=True)
         st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
         if st.session_state.show_video:
             st.video("https://www.youtube.com/watch?v=_88XGkSaWos")
@@ -352,47 +322,13 @@ def results_page():
             st.image("images/swisAlps.jpg", caption="Swiss Alps", use_column_width=True, output_format="auto")
             st.markdown('</div>', unsafe_allow_html=True)
 
-        st.markdown("""
-            <style>
-            .column-padding {
-                padding-top: 50px !important;
-            }
-            .main-image {
-                width: 100%;
-                height: 300px;
-                object-fit: cover;
-                border-radius: 10px;
-                margin-bottom: 20px;
-            }
-            .small-images-container {
-                display: flex;
-                justify-content: space-between;
-                gap: 20px;
-            }
-            .small-image {
-                width: 48%;
-                height: 200px;
-                object-fit: cover;
-                border-radius: 10px;
-            }
-            
-            </style>
-            """, unsafe_allow_html=True)
-        st.markdown('<div class="column-padding">', unsafe_allow_html=True)
-        #st.markdown(unsafe_allow_html=True)
-        st.image("images/swisAlps.jpg", caption="swis Alps", use_column_width=True, output_format="auto")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown("<div class='small-images-container'>", unsafe_allow_html=True)
-        col3, col4 = st.columns(2)
-        with col3:
-            st.image("images/CanadianRockies.jpg", caption="Canadian Rockies", use_column_width=True)
-        with col4:
-            st.image("images/Patagonia.jpg", caption="Patagonia", use_column_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-            
- 
+            st.markdown("<div class='small-images-container'>", unsafe_allow_html=True)
+            col3, col4 = st.columns(2)
+            with col3:
+                st.image("images/CanadianRockies.jpg", caption="Canadian Rockies", use_column_width=True)
+            with col4:
+                st.image("images/Patagonia.jpg", caption="Patagonia", use_column_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
     if 'contents' not in st.session_state:
         st.session_state['contents'] = [("robot",
@@ -402,11 +338,11 @@ def results_page():
     with col1:
         with st.container(border=True):
             with st.container():
-                st.chat_input(key='content', on_submit=chat_content) 
+                st.chat_input(key='content', on_submit=chat_content)
                 button_b_pos = "0rem"
                 button_css = float_css_helper(width="2.2rem", bottom=button_b_pos, transition=0)
                 float_parent(css=button_css)
-            
+
             if st.session_state.contents:
                 for i, [role, content] in enumerate(st.session_state.contents):
                     if role == 'user':
@@ -426,58 +362,21 @@ def results_page():
                         else:
                             with st.chat_message(name='MEAI', avatar='🤖'):
                                 st.write(content)
-                            
 
-    # with pics_column:
-    #     st.markdown("## Your Travel Preferences")
-    #     st.write(f"Month of Travel: {st.session_state.travel_month}")
-    #     st.write(f"Number of Days: {st.session_state.travel_days}")
-    #     st.write(f"Preference: {st.session_state.preference}")
-    #     st.write(f"Specific Preference: {st.session_state.additional_preference}")
-    #     st.write(f'Budget: {st.session_state.budget}')
-    #     st.write(f'Prefer self-driving: {st.session_state.self_driving}')
-    #     st.write(f'Sensitive to weather: {st.session_state.weather}')
-    #     st.write(f'Tightness of schedule: {st.session_state.schedule}')
-    #     st.write(f'Your language: {st.session_state.language}')
 
-    #     if st.button("Go Back"):
-    #         st.session_state.page = "main"
-    #         st.rerun()
-
-def chat_content():
-    user_message = st.session_state.content
-    st.session_state['contents'].append(('user', user_message))
-    chatbot_response = "This is what you sent: " + user_message
-    st.session_state['contents'].append(('robot', chatbot_response))
-    
-def generate_chatbot_response(user_input):
-    # Call LLM here
-    # dummy response for now
-
-    response = random.choice(
-        [
-            "Hello there! How can I assist you today?",
-            "Hi, human! Is there anything I can help you with?",
-            "Do you need help?",
-        ]
-    )
-    for word in response.split():
-        yield word + " "
-        time.sleep(0.05)
-
-def stream_the_text(text):
-    for word in text.split():
-        yield word + " "
-        time.sleep(0.05)
 with st.sidebar:
     st.markdown("## MEAI (Beta)")
     st.markdown('<button class="sidebar-icons"><i class="fas fa-comments"></i></button> Chats', unsafe_allow_html=True)
-    st.markdown('<button class="sidebar-icons"><i class="fas fa-bell"></i></button> Notifications', unsafe_allow_html=True)
+    st.markdown('<button class="sidebar-icons"><i class="fas fa-bell"></i></button> Notifications',
+                unsafe_allow_html=True)
     st.markdown('<button class="sidebar-icons"><i class="fas fa-thumbs-up"></i></button> Likes', unsafe_allow_html=True)
-    st.markdown('<button class="sidebar-icons"><i class="fas fa-arrow-circle-up"></i></button> Up Next', unsafe_allow_html=True)
+    st.markdown('<button class="sidebar-icons"><i class="fas fa-arrow-circle-up"></i></button> Up Next',
+                unsafe_allow_html=True)
     st.markdown('<button class="sidebar-icons"><i class="fas fa-search"></i></button> Explore', unsafe_allow_html=True)
-    st.markdown('<button class="sidebar-icons"><i class="fas fa-plus-circle"></i></button> Create', unsafe_allow_html=True)
-    st.markdown('<button class="sidebar-icons"><i class="fas fa-comment-alt"></i></button> New Chat', unsafe_allow_html=True)
+    st.markdown('<button class="sidebar-icons"><i class="fas fa-plus-circle"></i></button> Create',
+                unsafe_allow_html=True)
+    st.markdown('<button class="sidebar-icons"><i class="fas fa-comment-alt"></i></button> New Chat',
+                unsafe_allow_html=True)
 
 # Main content layout
 if st.session_state.page == "main":
