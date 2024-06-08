@@ -2,6 +2,10 @@ import streamlit as st
 from streamlit_float import *
 import random
 import time
+import folium
+from streamlit_folium import folium_static
+import googlemaps
+import re
 
 # Set up the page layout
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
@@ -31,6 +35,17 @@ if 'chatbot_messages' not in st.session_state:
     st.session_state.chatbot_messages = []
 if 'show_video' not in st.session_state:
     st.session_state.show_video = False
+if 'show_map' not in st.session_state:
+    st.session_state.show_map = False
+if 'trip_locations' not in st.session_state:
+    st.session_state.trip_locations = []
+if 'route_points' not in st.session_state:
+    st.session_state.route_points = []
+if 'initial_message_rendered' not in st.session_state:
+    st.session_state.initial_message_rendered = False
+
+google_maps_api_key = st.secrets["GMAPS_API_KEY"]
+gmaps = googlemaps.Client(key=google_maps_api_key)
 
 
 # Function to display the main page
@@ -155,14 +170,107 @@ def main_page():
         st.markdown("</div>", unsafe_allow_html=True)
 
 
+def get_location_coordinates(location_name):
+    geocode_result = gmaps.geocode(location_name)
+    location = geocode_result[0]['geometry']['location']
+    return (location['lat'], location['lng'])
+
+
+def calculate_route_info(locations):
+    waypoints = [loc for loc in locations[1:-1]]  # Exclude start and end locations
+    directions = gmaps.directions(locations[0], locations[-1], waypoints=waypoints, optimize_waypoints=True)
+
+    if not directions:
+        st.error("Could not get directions. Please check the locations and try again.")
+        return None
+
+    route_points = []
+    leg_durations = []
+    all_leg_points = []
+    for i, leg in enumerate(directions[0]['legs']):
+        leg_points = []
+        for step in leg['steps']:
+            leg_points.append((step['start_location']['lat'], step['start_location']['lng']))
+        leg_points.append((leg['end_location']['lat'], leg['end_location']['lng']))
+        route_points.extend(leg_points)
+        all_leg_points.append(leg_points)
+
+        leg_duration = leg['duration']['text']
+        leg_duration = leg_duration.replace("hours", "h").replace("hour", "h").replace("mins", "m").replace("min",
+                                                                                                            "m").replace(
+            "day", "d")
+        leg_durations.append(leg_duration)
+
+    duration = sum(leg['duration']['value'] for leg in directions[0]['legs'])
+    duration_text = f"{duration // 3600}h {(duration % 3600) // 60}min"
+    duration_text = duration_text.replace("hours", "h").replace("hour", "h").replace("mins", "m").replace("min",
+                                                                                                          "m").replace(
+        "day", "d")
+
+    return all_leg_points, leg_durations, duration_text
+
+
+def display_route_map(locations, all_leg_points):
+    start_coords = get_location_coordinates(locations[0])
+    m = folium.Map(location=start_coords, width='90%', height='80%')
+
+    folium.Marker(start_coords, tooltip=folium.Tooltip(f'{locations[0]}', permanent=True),
+                  icon=folium.Icon(color='green')).add_to(m)
+
+    for i in range(1, len(locations) - 1):
+        stop_coords = get_location_coordinates(locations[i])
+        folium.Marker(stop_coords, tooltip=folium.Tooltip(f'{locations[i]}', permanent=True),
+                      icon=folium.Icon(color='blue')).add_to(m)
+
+    end_coords = get_location_coordinates(locations[-1])
+    folium.Marker(end_coords, tooltip=folium.Tooltip(f'{locations[-1]}', permanent=True),
+                  icon=folium.Icon(color='red')).add_to(m)
+
+    for leg_points in all_leg_points:
+        folium.PolyLine(leg_points, color="blue", weight=2.5, opacity=1).add_to(m)
+
+    location_coords = [get_location_coordinates(loc) for loc in locations]
+    m.fit_bounds(location_coords)
+
+    folium_static(m)
+
+
 def chat_content():
     user_message = st.session_state.content
     st.session_state['contents'].append(('user', user_message))
-    if user_message.strip().lower() == "why":
+    if user_message.strip().lower() == "any tips?":
         st.session_state.show_video = True
-        chatbot_response = "Here's the reason"
+        chatbot_response = (
+            f"Here are some useful tips about your trip to Swiss Alps:\n" +
+            '\n'.join(
+                ['1. In Switzerland, there are various travel passes and half fare cards, which can save you a lot of cash. [click here to know more about them.](https://www.sbb.ch/en/tickets-offers/tickets/guests-abroad/swiss-halffare-card.html)',
+                 '2. Since you are an avid photographer, here are our recommendations about prime sites and times [click here](https://www.alpenwild.com/staticpage/when-to-hike-in-the-alps/)',
+                 '3. ...']
+            )
+        )
+    elif "plan" in user_message.lower():
+        # Call google maps function to calculate the necessary route
+        locations = ["Los Angeles", "Las Vegas", "Detroit", "New York"]
+        # Get the route information
+        route_points, leg_durations, duration_text = calculate_route_info(locations)
+        st.session_state.trip_locations = locations
+        st.session_state.route_points = route_points
+
+        # Generate the chatbot response
+        chatbot_response = (
+            f"Here is the route for your trip: {locations}\n"
+            f"The total duration of the trip is: {duration_text}\n\n"
+            + ' \n'.join(
+                [f"Day {i + 1}: From {locations[i]} to {locations[i + 1]} trip time is: {leg_duration}" for i, leg_duration in enumerate(leg_durations)]
+            )
+        )
+
+        # Trigger the map display
+        st.session_state.show_map = True
+        st.session_state.show_video = False
     else:
         chatbot_response = "This is what you sent: " + user_message
+
     st.session_state['contents'].append(('robot', chatbot_response))
 
 
@@ -182,7 +290,6 @@ def stream_the_text(text):
     for word in text.split():
         yield word + " "
         time.sleep(0.05)
-
 
 def results_page():
     float_init(theme=True, include_unstable_primary=False)  # to make the chatbot input text goes down
@@ -225,6 +332,8 @@ def results_page():
         st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
         if st.session_state.show_video:
             st.video("https://www.youtube.com/watch?v=_88XGkSaWos")
+        elif st.session_state.show_map and len(st.session_state.route_points) != 0 and len(st.session_state.trip_locations) != 0:
+            display_route_map(st.session_state.trip_locations, st.session_state.route_points)
         else:
             st.markdown('<div class="column-padding">', unsafe_allow_html=True)
             st.image("images/swisAlps.jpg", caption="Swiss Alps", use_column_width=True, output_format="auto")
@@ -240,11 +349,11 @@ def results_page():
 
     if 'contents' not in st.session_state:
         st.session_state['contents'] = [("robot",
-                                         "Based on your preferences, needs and constraints, here are the best destinations:\n1. Swiss Alps [95]\n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?")
+                                         "Based on your preferences, needs and constraints, here are the best destinations:  \n1. Swiss Alps [95]  \n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?")
                                         ]
 
     with col1:
-        with st.container(border=True):
+        with st.container(border=True, height=790):
             with st.container():
                 st.chat_input(key='content', on_submit=chat_content)
                 button_b_pos = "0rem"
@@ -252,18 +361,34 @@ def results_page():
                 float_parent(css=button_css)
 
             if st.session_state.contents:
-                for role, content in st.session_state.contents:
+                for i, [role, content] in enumerate(st.session_state.contents):
                     if role == 'user':
                         with st.chat_message(name='User', avatar='👤'):
                             st.write(content)
                     elif role == 'robot':
-                        if content == st.session_state.contents[-1][1] and len(st.session_state['contents']) > 1:
+                        if i == len(st.session_state.contents) - 1:
                             with st.chat_message(name='MEAI', avatar='🤖'):
-                                st.write_stream(stream_the_text(content))
+                                message_placeholder = st.empty()
+                                full_response = ""
+                                for chunk in re.split(r'(\s+)', content):
+                                    full_response += chunk + " "
+                                    time.sleep(0.01)
+                                    message_placeholder.markdown(full_response + " ")
                         else:
                             with st.chat_message(name='MEAI', avatar='🤖'):
                                 st.write(content)
 
+    if not st.session_state.initial_message_rendered:
+        with col1:
+            with st.chat_message(name='MEAI', avatar='🤖'):
+                message_placeholder = st.empty()
+                initial_message = "Based on your preferences, needs and constraints, here are the best destinations:\n1. Swiss Alps [95]\n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?"
+                full_response = ""
+                for word in re.split(r'(\s+)', initial_message):
+                    full_response += word + " "
+                    time.sleep(0.01)
+                    message_placeholder.markdown(full_response + "|")
+                st.session_state.initial_message_rendered = True
 
 with st.sidebar:
     st.markdown("## MEAI (Beta)")
