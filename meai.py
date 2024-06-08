@@ -336,7 +336,7 @@ def results_page():
                                         ]
 
     with col1:
-        with st.container(border=True):
+        with st.container(border=True, height=790):
             with st.container():
                 st.chat_input(key='content', on_submit=chat_content)
                 button_b_pos = "0rem"
