@@ -222,8 +222,7 @@ def calculate_route_info(locations):
 def display_route_map(locations, all_leg_points):
 
     start_coords = get_location_coordinates(locations[0])
-    m = folium.Map(location=start_coords, width='90%', height='80%')
-
+    m = folium.Map(location=start_coords, width='75%', height='300px')
     folium.Marker(start_coords, tooltip=folium.Tooltip(f'{locations[0]}', permanent=True), icon=folium.Icon(color='green')).add_to(m)
 
     for i in range(1, len(locations) - 1):
@@ -239,7 +238,7 @@ def display_route_map(locations, all_leg_points):
     location_coords = [get_location_coordinates(loc) for loc in locations]
     m.fit_bounds(location_coords)
 
-    folium_static(m)
+    folium_static(m, height=300)
 
     
 
@@ -265,7 +264,7 @@ def chat_content():
         # chatbot_response = f"Here is the route for your trip: {locations}\n The total duration of the trip is: {duration_text}\n\n" \
         #                     f"{' \n'.join([f'Day {i+1}: From {locations[i]} to {locations[i+1]} trip time is: {leg_duration}' for i, leg_duration in enumerate(leg_durations)])}"
         
-        chatbot_response = " Here is your travel plan"
+        chatbot_response = " Please find the travel plan on the right. We can help you book the reservations here!"
         # trigger the map display
         st.session_state.show_map = True
         st.session_state.show_video = False
@@ -300,10 +299,20 @@ def results_page():
         <style>
             .css-1d391kg {
                 width: 250px !important;
+                padding-top: 3.5rem;
+                padding-right: 1rem;
+                padding-bottom: 3.5rem;
+                padding-left: 1rem;
             }
             .css-1e5imcs {
                 margin-left: 260px !important;
             }
+            .css-18e3th9 {
+                    padding-top: 0rem;
+                    padding-bottom: 10rem;
+                    padding-left: 5rem;
+                    padding-right: 5rem;
+                }
             .explore-heading {
                 padding-top: 20px;
                 text-align: center;
@@ -324,22 +333,38 @@ def results_page():
                 position: sticky;
                 top: 0;
             }
+            .block-container {
+                    padding-top: 1rem;
+                    padding-bottom: 0rem;
+                    padding-left: 5rem;
+                    padding-right: 5rem;
+                }
         </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     """, unsafe_allow_html=True)
 
     col1, col2 = st.columns([3, 2])
     with col2:
-        with st.container(border=True, height=790):
-            st.markdown('<div class="sticky">', unsafe_allow_html=True)
+        with st.container(border=True, height=850):
+            # st.markdown('<div class="sticky">', unsafe_allow_html=True)
             st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
             if st.session_state.show_video:
                 st.video("https://www.youtube.com/watch?v=_88XGkSaWos")
             elif st.session_state.show_map and len(st.session_state.route_points) != 0 and len(st.session_state.trip_locations) != 0:
+                # Display the map and remove the padding between the text and the border
+                st.markdown('<div class="block-container">', unsafe_allow_html=True)
                 display_route_map(st.session_state.trip_locations, st.session_state.route_points)
 
-                st.write(f" Here is the route for your trip: {st.session_state.trip_locations}\n The total duration of the trip is: {st.session_state.duration_text}\n\n" \
-                                            + '\n'.join([f'Day {i+1}: From {st.session_state.trip_locations[i]} to {st.session_state.trip_locations[i+1]} trip time is: {st.session_state.leg_durations[i]}' for i in range(len(st.session_state.leg_durations))]))
+
+                
+                # use css styling to make the text appear directly under the map ( without any padding)
+                st.write(
+                    f"**Here is the route for your trip:** {st.session_state.trip_locations}  \n"
+                    f"**The total duration of the trip is:** {st.session_state.duration_text}  \n" +
+                    '  \n'.join([f"**Day {i+1}: From {st.session_state.trip_locations[i]} to {st.session_state.trip_locations[i+1]}, trip time is: {st.session_state.leg_durations[i]}**"
+                            for i in range(len(st.session_state.leg_durations))]) )
+                
+            
                 # use this information to get flight details
                 if get_iata_code(st.session_state.trip_locations[0]) != "Unknown":
                     departure_city =  get_iata_code(st.session_state.trip_locations[0])
@@ -376,7 +401,7 @@ def results_page():
                                         ]
 
     with col1:
-        with st.container(border=True, height=790):
+        with st.container(border=True, height=850):
             with st.container():
                 st.chat_input(key='content', on_submit=chat_content)
                 button_b_pos = "0rem"
