@@ -364,21 +364,21 @@ def results_page():
                     '  \n'.join([f"**Day {i+1}: From {st.session_state.trip_locations[i]} to {st.session_state.trip_locations[i+1]}, trip time is: {st.session_state.leg_durations[i]}**"
                             for i in range(len(st.session_state.leg_durations))]) )
                 
-            
-                # use this information to get flight details
-                if get_iata_code(st.session_state.trip_locations[0]) != "Unknown":
-                    departure_city =  get_iata_code(st.session_state.trip_locations[0])
-                    destination_city = get_iata_code(st.session_state.trip_locations[1])
-                    # departure_date = st.date_input("Departure Date", date.today() + timedelta(days=1))
-                    # return_date = st.date_input("Return Date", date.today() + timedelta(days=7))
-                    departure_date = date.today() + timedelta(days=1)
-                    return_date = date.today() + timedelta(days=7)
-                    flights = fetch_flights_details(departure_city, destination_city, departure_date.strftime("%Y-%m-%d"), return_date.strftime("%Y-%m-%d"))
+                st.image("images/flights.jpg", use_column_width=True, output_format="auto")
+                # # use this information to get flight details
+                # if get_iata_code(st.session_state.trip_locations[0]) != "Unknown":
+                #     departure_city =  get_iata_code(st.session_state.trip_locations[0])
+                #     destination_city = get_iata_code(st.session_state.trip_locations[1])
+                #     # departure_date = st.date_input("Departure Date", date.today() + timedelta(days=1))
+                #     # return_date = st.date_input("Return Date", date.today() + timedelta(days=7))
+                #     departure_date = date.today() + timedelta(days=1)
+                #     return_date = date.today() + timedelta(days=7)
+                #     flights = fetch_flights_details(departure_city, destination_city, departure_date.strftime("%Y-%m-%d"), return_date.strftime("%Y-%m-%d"))
     
-                    st.write("Available Flights:")
-                    st.dataframe(pd.DataFrame(flights), hide_index=True)
-                else:
-                    st.error("Could not find IATA code for departure city")
+                #     st.write("Available Flights:")
+                #     st.dataframe(pd.DataFrame(flights), hide_index=True)
+                # else:
+                    # st.error("Could not find IATA code for departure city")
 
                 
 
