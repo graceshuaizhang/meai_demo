@@ -6,9 +6,20 @@ import folium
 from streamlit_folium import folium_static
 import googlemaps
 import re
+from amadeus import Client, ResponseError
+from datetime import date, timedelta
+import pandas as pd
+import isodate
+
 
 # Set up the page layout
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
+
+# Initialize Amadeus API
+amadeus = Client(
+    client_id=st.secrets["AMADEUS_API_KEY"],
+    client_secret=st.secrets["AMADEUS_API_SECRET"]
+)
 
 # Initialize session state variables
 if 'travel_month' not in st.session_state:
@@ -41,12 +52,14 @@ if 'trip_locations' not in st.session_state:
     st.session_state.trip_locations = []
 if 'route_points' not in st.session_state:
     st.session_state.route_points = []
-if 'initial_message_rendered' not in st.session_state:
-    st.session_state.initial_message_rendered = False
+if 'leg_durations' not in st.session_state:
+    st.session_state.leg_durations = []
+if 'duration_text' not in st.session_state:
+    st.session_state.duration_text = ""
+
 
 google_maps_api_key = st.secrets["GMAPS_API_KEY"]
 gmaps = googlemaps.Client(key=google_maps_api_key)
-
 
 # Function to display the main page
 def main_page():
@@ -100,11 +113,11 @@ def main_page():
                                                   "festivals/events", 'others'])
 
         budget = st.number_input("How much is your budget?", min_value=10, max_value=100000, step=1)
-        self_driving = st.number_input('Do you prefer self-driving? 0: not prefer at all, 10: extremely prefer.',
+        self_driving = st.number_input('Do you prefer self-driving?  \nRate from 0 to 10. 0: not prefer at all, 10: extremely prefer.',
                                        min_value=0, max_value=10, step=1)
-        weather = st.number_input('Are you sensitive to weather? 0: insensitive, 10: very sensitive.',
+        weather = st.number_input('Are you sensitive to weather?  \nRate from 0 to 10. 0: insensitive, 10: very sensitive.',
                                   min_value=0, max_value=10, step=1)
-        schedule = st.number_input('Do you prefer a tight or loose schedule? 0: very loose, 10：very tight.',
+        schedule = st.number_input('Do you prefer a tight or loose schedule?  \nRate from 0 to 10. 0: very loose, 10：very tight.',
                                    min_value=0, max_value=10, step=1)
 
         langs = ['English', 'Spanish', 'Chinese', 'Arabic', 'French', 'German', 'Hindi', 'Portuguese', 'Bengali',
@@ -158,15 +171,15 @@ def main_page():
             </style>
         """, unsafe_allow_html=True)
         st.markdown('<div class="column-padding">', unsafe_allow_html=True)
-        st.image("images/pic1.jpg", caption="Horseshoe Bend", use_column_width=True, output_format="auto")
+        st.image("images/pic1.jpeg", caption="Bora Bora, French Polynesia", use_column_width=True, output_format="auto")
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown("<div class='small-images-container'>", unsafe_allow_html=True)
         col3, col4 = st.columns(2)
         with col3:
-            st.image("images/pic2.jpg", caption="Santa Monica Pier", use_column_width=True)
+            st.image("images/pic2.jpg", caption="Alpamayo peak, Peruvian Andes", use_column_width=True)
         with col4:
-            st.image("images/pic3.jpg", caption="Grand Rapids", use_column_width=True)
+            st.image("images/pic3.jpeg", caption="Moreno Glacier, Argentina Patagonia", use_column_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -174,7 +187,6 @@ def get_location_coordinates(location_name):
     geocode_result = gmaps.geocode(location_name)
     location = geocode_result[0]['geometry']['location']
     return (location['lat'], location['lng'])
-
 
 def calculate_route_info(locations):
     waypoints = [loc for loc in locations[1:-1]]  # Exclude start and end locations
@@ -196,35 +208,29 @@ def calculate_route_info(locations):
         all_leg_points.append(leg_points)
 
         leg_duration = leg['duration']['text']
-        leg_duration = leg_duration.replace("hours", "h").replace("hour", "h").replace("mins", "m").replace("min",
-                                                                                                            "m").replace(
-            "day", "d")
+        leg_duration = leg_duration.replace("hours", "h").replace("hour", "h").replace("mins", "m").replace("min", "m").replace("day", "d")
         leg_durations.append(leg_duration)
+
 
     duration = sum(leg['duration']['value'] for leg in directions[0]['legs'])
     duration_text = f"{duration // 3600}h {(duration % 3600) // 60}min"
-    duration_text = duration_text.replace("hours", "h").replace("hour", "h").replace("mins", "m").replace("min",
-                                                                                                          "m").replace(
-        "day", "d")
+    duration_text = duration_text.replace("hours", "h").replace("hour", "h").replace("mins", "m").replace("min", "m").replace("day", "d")
+    
 
     return all_leg_points, leg_durations, duration_text
 
-
 def display_route_map(locations, all_leg_points):
-    start_coords = get_location_coordinates(locations[0])
-    m = folium.Map(location=start_coords, width='90%', height='80%')
 
-    folium.Marker(start_coords, tooltip=folium.Tooltip(f'{locations[0]}', permanent=True),
-                  icon=folium.Icon(color='green')).add_to(m)
+    start_coords = get_location_coordinates(locations[0])
+    m = folium.Map(location=start_coords, width='75%', height='250px')
+    folium.Marker(start_coords, tooltip=folium.Tooltip(f'{locations[0]}', permanent=True), icon=folium.Icon(color='green')).add_to(m)
 
     for i in range(1, len(locations) - 1):
         stop_coords = get_location_coordinates(locations[i])
-        folium.Marker(stop_coords, tooltip=folium.Tooltip(f'{locations[i]}', permanent=True),
-                      icon=folium.Icon(color='blue')).add_to(m)
+        folium.Marker(stop_coords, tooltip=folium.Tooltip(f'{locations[i]}', permanent=True), icon=folium.Icon(color='blue')).add_to(m)
 
     end_coords = get_location_coordinates(locations[-1])
-    folium.Marker(end_coords, tooltip=folium.Tooltip(f'{locations[-1]}', permanent=True),
-                  icon=folium.Icon(color='red')).add_to(m)
+    folium.Marker(end_coords, tooltip=folium.Tooltip(f'{locations[-1]}', permanent=True), icon=folium.Icon(color='red')).add_to(m)
 
     for leg_points in all_leg_points:
         folium.PolyLine(leg_points, color="blue", weight=2.5, opacity=1).add_to(m)
@@ -232,45 +238,39 @@ def display_route_map(locations, all_leg_points):
     location_coords = [get_location_coordinates(loc) for loc in locations]
     m.fit_bounds(location_coords)
 
-    folium_static(m)
+    folium_static(m, height=300)
+
+    
+
 
 
 def chat_content():
     user_message = st.session_state.content
     st.session_state['contents'].append(('user', user_message))
-    if user_message.strip().lower() == "any tips?":
+    if user_message.strip().lower() == "why":
         st.session_state.show_video = True
-        chatbot_response = (
-            f"Here are some useful tips about your trip to Swiss Alps:\n" +
-            '\n'.join(
-                ['1. In Switzerland, there are various travel passes and half fare cards, which can save you a lot of cash. [click here to know more about them.](https://www.sbb.ch/en/tickets-offers/tickets/guests-abroad/swiss-halffare-card.html)',
-                 '2. Since you are an avid photographer, here are our recommendations about prime sites and times [click here](https://www.alpenwild.com/staticpage/when-to-hike-in-the-alps/)',
-                 '3. ...']
-            )
-        )
+        chatbot_response = "Here's the reason："
     elif "plan" in user_message.lower():
         # Call google maps function to calculate the necessary route
-        locations = ["Los Angeles", "Las Vegas", "Detroit", "New York"]
-        # Get the route information
+        locations = ["Geneva", "Zermatt", "Interlaken", "Zurich"]
+        # # Get the route information
         route_points, leg_durations, duration_text = calculate_route_info(locations)
         st.session_state.trip_locations = locations
         st.session_state.route_points = route_points
+        st.session_state.leg_durations = leg_durations
+        st.session_state.duration_text = duration_text
 
-        # Generate the chatbot response
-        chatbot_response = (
-            f"Here is the route for your trip: {locations}\n"
-            f"The total duration of the trip is: {duration_text}\n\n"
-            + ' \n'.join(
-                [f"Day {i + 1}: From {locations[i]} to {locations[i + 1]} trip time is: {leg_duration}" for i, leg_duration in enumerate(leg_durations)]
-            )
-        )
-
-        # Trigger the map display
+        # write a summary about the routes and the duration as a response
+        # chatbot_response = f"Here is the route for your trip: {locations}\n The total duration of the trip is: {duration_text}\n\n" \
+        #                     f"{' \n'.join([f'Day {i+1}: From {locations[i]} to {locations[i+1]} trip time is: {leg_duration}' for i, leg_duration in enumerate(leg_durations)])}"
+        
+        chatbot_response = " Please find the travel plan on the right. We can help you book the reservations here!"
+        # trigger the map display
         st.session_state.show_map = True
         st.session_state.show_video = False
+        
     else:
         chatbot_response = "This is what you sent: " + user_message
-
     st.session_state['contents'].append(('robot', chatbot_response))
 
 
@@ -291,6 +291,7 @@ def stream_the_text(text):
         yield word + " "
         time.sleep(0.05)
 
+
 def results_page():
     float_init(theme=True, include_unstable_primary=False)  # to make the chatbot input text goes down
 
@@ -298,10 +299,20 @@ def results_page():
         <style>
             .css-1d391kg {
                 width: 250px !important;
+                padding-top: 3.5rem;
+                padding-right: 1rem;
+                padding-bottom: 3.5rem;
+                padding-left: 1rem;
             }
             .css-1e5imcs {
                 margin-left: 260px !important;
             }
+            .css-18e3th9 {
+                    padding-top: 0rem;
+                    padding-bottom: 10rem;
+                    padding-left: 5rem;
+                    padding-right: 5rem;
+                }
             .explore-heading {
                 padding-top: 20px;
                 text-align: center;
@@ -322,30 +333,67 @@ def results_page():
                 position: sticky;
                 top: 0;
             }
+            .block-container {
+                    padding-top: 1rem;
+                    padding-bottom: 0rem;
+                    padding-left: 5rem;
+                    padding-right: 5rem;
+                }
         </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns([3, 2])
+    col1, col2 = st.columns([5, 5])
     with col2:
-        st.markdown('<div class="sticky">', unsafe_allow_html=True)
-        st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
-        if st.session_state.show_video:
-            st.video("https://www.youtube.com/watch?v=_88XGkSaWos")
-        elif st.session_state.show_map and len(st.session_state.route_points) != 0 and len(st.session_state.trip_locations) != 0:
-            display_route_map(st.session_state.trip_locations, st.session_state.route_points)
-        else:
-            st.markdown('<div class="column-padding">', unsafe_allow_html=True)
-            st.image("images/swisAlps.jpg", caption="Swiss Alps", use_column_width=True, output_format="auto")
-            st.markdown('</div>', unsafe_allow_html=True)
+        with st.container(border=True, height=850):
+            # st.markdown('<div class="sticky">', unsafe_allow_html=True)
+            st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
+            if st.session_state.show_video:
+                st.video("https://www.youtube.com/watch?v=Cd1Tc2UpnDY")
+            elif st.session_state.show_map and len(st.session_state.route_points) != 0 and len(st.session_state.trip_locations) != 0:
+                # Display the map and remove the padding between the text and the border
+                st.markdown('<div class="block-container">', unsafe_allow_html=True)
+                display_route_map(st.session_state.trip_locations, st.session_state.route_points)
 
-            st.markdown("<div class='small-images-container'>", unsafe_allow_html=True)
-            col3, col4 = st.columns(2)
-            with col3:
-                st.image("images/CanadianRockies.jpg", caption="Canadian Rockies", use_column_width=True)
-            with col4:
-                st.image("images/Patagonia.jpg", caption="Patagonia", use_column_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+
+                
+                # use css styling to make the text appear directly under the map ( without any padding)
+                st.write(
+                    f"**Here is the route for your trip:** {st.session_state.trip_locations}  \n"
+                    f"**The total duration of the trip is:** {st.session_state.duration_text}  \n" +
+                    '  \n'.join([f"**Day {i+1}: From {st.session_state.trip_locations[i]} to {st.session_state.trip_locations[i+1]}, trip time is: {st.session_state.leg_durations[i]}**"
+                            for i in range(len(st.session_state.leg_durations))]) )
+                
+                st.image("images/flights.jpg", use_column_width=True, output_format="auto")
+                # # use this information to get flight details
+                # if get_iata_code(st.session_state.trip_locations[0]) != "Unknown":
+                #     departure_city =  get_iata_code(st.session_state.trip_locations[0])
+                #     destination_city = get_iata_code(st.session_state.trip_locations[1])
+                #     # departure_date = st.date_input("Departure Date", date.today() + timedelta(days=1))
+                #     # return_date = st.date_input("Return Date", date.today() + timedelta(days=7))
+                #     departure_date = date.today() + timedelta(days=1)
+                #     return_date = date.today() + timedelta(days=7)
+                #     flights = fetch_flights_details(departure_city, destination_city, departure_date.strftime("%Y-%m-%d"), return_date.strftime("%Y-%m-%d"))
+    
+                #     st.write("Available Flights:")
+                #     st.dataframe(pd.DataFrame(flights), hide_index=True)
+                # else:
+                    # st.error("Could not find IATA code for departure city")
+
+                
+
+            else:
+                st.markdown('<div class="column-padding">', unsafe_allow_html=True)
+                st.image("images/swisAlps.jpg", caption="Swiss Alps", use_column_width=True, output_format="auto")
+                st.markdown('</div>', unsafe_allow_html=True)
+
+                st.markdown("<div class='small-images-container'>", unsafe_allow_html=True)
+                col3, col4 = st.columns(2)
+                with col3:
+                    st.image("images/CanadianRockies.jpg", caption="Canadian Rockies", use_column_width=True)
+                with col4:
+                    st.image("images/Patagonia.jpg", caption="Patagonia", use_column_width=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
     if 'contents' not in st.session_state:
         st.session_state['contents'] = [("robot",
@@ -353,7 +401,7 @@ def results_page():
                                         ]
 
     with col1:
-        with st.container(border=True, height=790):
+        with st.container(border=True, height=850):
             with st.container():
                 st.chat_input(key='content', on_submit=chat_content)
                 button_b_pos = "0rem"
@@ -366,29 +414,80 @@ def results_page():
                         with st.chat_message(name='User', avatar='👤'):
                             st.write(content)
                     elif role == 'robot':
-                        if i == len(st.session_state.contents) - 1:
+                        if  i == len(st.session_state.contents) - 1 and len(st.session_state['contents']) > 1:
                             with st.chat_message(name='MEAI', avatar='🤖'):
                                 message_placeholder = st.empty()
                                 full_response = ""
                                 for chunk in re.split(r'(\s+)', content):
                                     full_response += chunk + " "
                                     time.sleep(0.01)
-                                    message_placeholder.markdown(full_response + " ")
+                                    message_placeholder.markdown(full_response + "|")
+                                    
+                                # st.write_stream(stream_the_text(content))
                         else:
                             with st.chat_message(name='MEAI', avatar='🤖'):
                                 st.write(content)
 
-    if not st.session_state.initial_message_rendered:
-        with col1:
-            with st.chat_message(name='MEAI', avatar='🤖'):
-                message_placeholder = st.empty()
-                initial_message = "Based on your preferences, needs and constraints, here are the best destinations:\n1. Swiss Alps [95]\n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?"
-                full_response = ""
-                for word in re.split(r'(\s+)', initial_message):
-                    full_response += word + " "
-                    time.sleep(0.01)
-                    message_placeholder.markdown(full_response + "|")
-                st.session_state.initial_message_rendered = True
+def fetch_flights_details(departure_city, destination_city, departure_date, return_date, max_results=8):
+    try:
+        response = amadeus.shopping.flight_offers_search.get(
+            originLocationCode=departure_city,
+            destinationLocationCode=destination_city,
+            departureDate=departure_date,
+            returnDate=return_date,
+            adults=1,
+            max= max_results
+        ).data
+
+        flights = []
+        for offer in response:
+            segments = offer['itineraries'][0]['segments']
+            total_duration = offer['itineraries'][0]['duration']
+            flight_info = {
+                'id': offer['id'],
+                'price': offer['price']['total'],
+                'currency': offer['price']['currency'],
+                'total_duration': convert_duration(total_duration),
+                'airlines': ', '.join({segment['carrierCode'] for segment in segments}),
+                'departure_time': segments[0]['departure']['at'],
+                'arrival_time': segments[-1]['arrival']['at'],
+                'stops': len(segments) - 1,
+                'aircraft': ', '.join({segment.get('aircraft', {}).get('code', 'N/A') for segment in segments}),
+                'booking_classes': ', '.join({segment.get('cabin', {}).get('code', 'N/A') for segment in segments})
+            }
+            flights.append(flight_info)
+        return flights
+
+    except ResponseError as error:
+        st.error(f"Error fetching flights: {error}")
+        return []
+
+# Dictionary of city names and their IATA codes
+city_to_iata = {
+    "New York": "JFK",
+    "Geneva": "GVA",
+    "San Francisco": "SFO",
+    "Chicago": "ORD",
+    "Miami": "MIA",
+    "London": "LHR",
+    "Paris": "CDG",
+    "Tokyo": "HND",
+    "Dubai": "DXB",
+    "Singapore": "SIN",
+    "Sydney": "SYD",
+    "Detroit": "DTW",
+    "Las Vegas": "LAS",
+}
+
+# Function to get IATA code from city name
+def get_iata_code(city_name):
+    return city_to_iata.get(city_name, "Unknown")
+
+def convert_duration(iso_duration):
+    duration_timedelta = isodate.parse_duration(iso_duration)
+    hours = duration_timedelta.seconds // 3600
+    minutes = (duration_timedelta.seconds % 3600) // 60
+    return f"{hours} hours {minutes} minutes"
 
 with st.sidebar:
     st.markdown("## MEAI (Beta)")
