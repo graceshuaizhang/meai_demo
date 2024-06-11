@@ -95,12 +95,16 @@ def main_page():
     with col1:
         st.markdown('<div class="preference-heading">Your preference for this trip</div>', unsafe_allow_html=True)
 
-        travel_month = st.selectbox("Which month do you plan to travel?", [
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
-        ])
-
-        travel_days = st.number_input("For how many days?", min_value=1, max_value=31, step=1)
+        st.write("In which month will you travel and for how many days?")
+        col3, col4 = st.columns(2)
+        with col3:
+            travel_month = st.selectbox("Month", [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ])
+        with col4:
+            travel_days = st.number_input("Days", min_value=1, max_value=100, step=1)
+            
         preference = st.selectbox("Do you prefer natural or cultural attractions?", ["natural", "cultural"])
 
         if preference == "natural":
