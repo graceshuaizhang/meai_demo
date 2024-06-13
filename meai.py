@@ -11,7 +11,6 @@ from datetime import date, timedelta
 import pandas as pd
 import isodate
 
-
 # Set up the page layout
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
@@ -56,10 +55,12 @@ if 'leg_durations' not in st.session_state:
     st.session_state.leg_durations = []
 if 'duration_text' not in st.session_state:
     st.session_state.duration_text = ""
-
+if 'initial_message_rendered' not in st.session_state:
+    st.session_state.initial_message_rendered = False
 
 google_maps_api_key = st.secrets["GMAPS_API_KEY"]
 gmaps = googlemaps.Client(key=google_maps_api_key)
+
 
 # Function to display the main page
 def main_page():
@@ -104,7 +105,7 @@ def main_page():
             ])
         with col4:
             travel_days = st.number_input("Days", min_value=1, max_value=100, step=1)
-            
+
         preference = st.selectbox("Do you prefer natural or cultural attractions?", ["natural", "cultural"])
 
         if preference == "natural":
@@ -117,12 +118,15 @@ def main_page():
                                                   "festivals/events", 'others'])
 
         budget = st.number_input("How much is your budget?", min_value=10, max_value=100000, step=1)
-        self_driving = st.number_input('Do you prefer self-driving?  \nRate from 0 to 10. 0: not prefer at all, 10: extremely prefer.',
-                                       min_value=0, max_value=10, step=1)
-        weather = st.number_input('Are you sensitive to weather?  \nRate from 0 to 10. 0: insensitive, 10: very sensitive.',
-                                  min_value=0, max_value=10, step=1)
-        schedule = st.number_input('Do you prefer a tight or loose schedule?  \nRate from 0 to 10. 0: very loose, 10：very tight.',
-                                   min_value=0, max_value=10, step=1)
+        self_driving = st.number_input(
+            'Do you prefer self-driving?  \nRate from 0 to 10. 0: not prefer at all, 10: extremely prefer.',
+            min_value=0, max_value=10, step=1)
+        weather = st.number_input(
+            'Are you sensitive to weather?  \nRate from 0 to 10. 0: insensitive, 10: very sensitive.',
+            min_value=0, max_value=10, step=1)
+        schedule = st.number_input(
+            'Do you prefer a tight or loose schedule?  \nRate from 0 to 10. 0: very loose, 10：very tight.',
+            min_value=0, max_value=10, step=1)
 
         langs = ['English', 'Spanish', 'Chinese', 'Arabic', 'French', 'German', 'Hindi', 'Portuguese', 'Bengali',
                  'Russian', 'Indonesian', 'Turkish', 'Urdu', 'Japanese', 'Greek', 'Croatian', 'Korean', 'Telugu',
@@ -192,6 +196,7 @@ def get_location_coordinates(location_name):
     location = geocode_result[0]['geometry']['location']
     return (location['lat'], location['lng'])
 
+
 def calculate_route_info(locations):
     waypoints = [loc for loc in locations[1:-1]]  # Exclude start and end locations
     directions = gmaps.directions(locations[0], locations[-1], waypoints=waypoints, optimize_waypoints=True)
@@ -215,26 +220,27 @@ def calculate_route_info(locations):
         leg_duration = leg_duration.replace("hours", "h").replace("hour", "h").replace("mins", "m").replace("min", "m").replace("day", "d")
         leg_durations.append(leg_duration)
 
-
     duration = sum(leg['duration']['value'] for leg in directions[0]['legs'])
     duration_text = f"{duration // 3600}h {(duration % 3600) // 60}min"
     duration_text = duration_text.replace("hours", "h").replace("hour", "h").replace("mins", "m").replace("min", "m").replace("day", "d")
-    
 
     return all_leg_points, leg_durations, duration_text
 
-def display_route_map(locations, all_leg_points):
 
+def display_route_map(locations, all_leg_points):
     start_coords = get_location_coordinates(locations[0])
     m = folium.Map(location=start_coords, width='75%', height='250px')
-    folium.Marker(start_coords, tooltip=folium.Tooltip(f'{locations[0]}', permanent=True), icon=folium.Icon(color='green')).add_to(m)
+    folium.Marker(start_coords, tooltip=folium.Tooltip(f'{locations[0]}', permanent=True),
+                  icon=folium.Icon(color='green')).add_to(m)
 
     for i in range(1, len(locations) - 1):
         stop_coords = get_location_coordinates(locations[i])
-        folium.Marker(stop_coords, tooltip=folium.Tooltip(f'{locations[i]}', permanent=True), icon=folium.Icon(color='blue')).add_to(m)
+        folium.Marker(stop_coords, tooltip=folium.Tooltip(f'{locations[i]}', permanent=True),
+                      icon=folium.Icon(color='blue')).add_to(m)
 
     end_coords = get_location_coordinates(locations[-1])
-    folium.Marker(end_coords, tooltip=folium.Tooltip(f'{locations[-1]}', permanent=True), icon=folium.Icon(color='red')).add_to(m)
+    folium.Marker(end_coords, tooltip=folium.Tooltip(f'{locations[-1]}', permanent=True),
+                  icon=folium.Icon(color='red')).add_to(m)
 
     for leg_points in all_leg_points:
         folium.PolyLine(leg_points, color="blue", weight=2.5, opacity=1).add_to(m)
@@ -243,9 +249,6 @@ def display_route_map(locations, all_leg_points):
     m.fit_bounds(location_coords)
 
     folium_static(m, height=300)
-
-    
-
 
 
 def chat_content():
@@ -257,22 +260,18 @@ def chat_content():
     elif "plan" in user_message.lower():
         # Call google maps function to calculate the necessary route
         locations = ["Geneva", "Zermatt", "Interlaken", "Zurich"]
-        # # Get the route information
+        # Get the route information
         route_points, leg_durations, duration_text = calculate_route_info(locations)
         st.session_state.trip_locations = locations
         st.session_state.route_points = route_points
         st.session_state.leg_durations = leg_durations
         st.session_state.duration_text = duration_text
 
-        # write a summary about the routes and the duration as a response
-        # chatbot_response = f"Here is the route for your trip: {locations}\n The total duration of the trip is: {duration_text}\n\n" \
-        #                     f"{' \n'.join([f'Day {i+1}: From {locations[i]} to {locations[i+1]} trip time is: {leg_duration}' for i, leg_duration in enumerate(leg_durations)])}"
-        
         chatbot_response = " Please find the travel plan on the right. We can help you book the reservations here!"
-        # trigger the map display
+        # Trigger the map display
         st.session_state.show_map = True
         st.session_state.show_video = False
-        
+
     else:
         chatbot_response = "This is what you sent: " + user_message
     st.session_state['contents'].append(('robot', chatbot_response))
@@ -312,11 +311,11 @@ def results_page():
                 margin-left: 260px !important;
             }
             .css-18e3th9 {
-                    padding-top: 0rem;
-                    padding-bottom: 10rem;
-                    padding-left: 5rem;
-                    padding-right: 5rem;
-                }
+                padding-top: 0rem;
+                padding-bottom: 10rem;
+                padding-left: 5rem;
+                padding-right: 5rem;
+            }
             .explore-heading {
                 padding-top: 20px;
                 text-align: center;
@@ -338,11 +337,11 @@ def results_page():
                 top: 0;
             }
             .block-container {
-                    padding-top: 1rem;
-                    padding-bottom: 0rem;
-                    padding-left: 5rem;
-                    padding-right: 5rem;
-                }
+                padding-top: 1rem;
+                padding-bottom: 0rem;
+                padding-left: 5rem;
+                padding-right: 5rem;
+            }
         </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     """, unsafe_allow_html=True)
@@ -350,47 +349,25 @@ def results_page():
     col1, col2 = st.columns([5, 5])
     with col2:
         with st.container(border=True, height=850):
-            # st.markdown('<div class="sticky">', unsafe_allow_html=True)
-            st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
+            st.markdown('<div class="explore-heading"> Recommendations </div>', unsafe_allow_html=True)
             if st.session_state.show_video:
                 st.video("https://www.youtube.com/watch?v=Cd1Tc2UpnDY")
             elif st.session_state.show_map and len(st.session_state.route_points) != 0 and len(st.session_state.trip_locations) != 0:
-                # Display the map and remove the padding between the text and the border
                 st.markdown('<div class="block-container">', unsafe_allow_html=True)
                 display_route_map(st.session_state.trip_locations, st.session_state.route_points)
-
-
-                
-                # use css styling to make the text appear directly under the map ( without any padding)
                 st.write(
                     f"**Here is the route for your trip:** {st.session_state.trip_locations}  \n"
                     f"**The total duration of the trip is:** {st.session_state.duration_text}  \n" +
-                    '  \n'.join([f"**Day {i+1}: From {st.session_state.trip_locations[i]} to {st.session_state.trip_locations[i+1]}, trip time is: {st.session_state.leg_durations[i]}**"
-                            for i in range(len(st.session_state.leg_durations))]) )
-                
+                    '  \n'.join([
+                        f"**Day {i + 1}: From {st.session_state.trip_locations[i]} to {st.session_state.trip_locations[i + 1]}, trip time is: {st.session_state.leg_durations[i]}**"
+                        for i in range(len(st.session_state.leg_durations))
+                    ])
+                )
                 st.image("images/flights.jpg", use_column_width=True, output_format="auto")
-                # # use this information to get flight details
-                # if get_iata_code(st.session_state.trip_locations[0]) != "Unknown":
-                #     departure_city =  get_iata_code(st.session_state.trip_locations[0])
-                #     destination_city = get_iata_code(st.session_state.trip_locations[1])
-                #     # departure_date = st.date_input("Departure Date", date.today() + timedelta(days=1))
-                #     # return_date = st.date_input("Return Date", date.today() + timedelta(days=7))
-                #     departure_date = date.today() + timedelta(days=1)
-                #     return_date = date.today() + timedelta(days=7)
-                #     flights = fetch_flights_details(departure_city, destination_city, departure_date.strftime("%Y-%m-%d"), return_date.strftime("%Y-%m-%d"))
-    
-                #     st.write("Available Flights:")
-                #     st.dataframe(pd.DataFrame(flights), hide_index=True)
-                # else:
-                    # st.error("Could not find IATA code for departure city")
-
-                
-
             else:
                 st.markdown('<div class="column-padding">', unsafe_allow_html=True)
                 st.image("images/swisAlps.jpg", caption="Swiss Alps", use_column_width=True, output_format="auto")
                 st.markdown('</div>', unsafe_allow_html=True)
-
                 st.markdown("<div class='small-images-container'>", unsafe_allow_html=True)
                 col3, col4 = st.columns(2)
                 with col3:
@@ -418,19 +395,28 @@ def results_page():
                         with st.chat_message(name='User', avatar='👤'):
                             st.write(content)
                     elif role == 'robot':
-                        if  i == len(st.session_state.contents) - 1 and len(st.session_state['contents']) > 1:
+                        if i == len(st.session_state.contents) - 1:
                             with st.chat_message(name='MEAI', avatar='🤖'):
                                 message_placeholder = st.empty()
                                 full_response = ""
-                                for chunk in re.split(r'(\s+)', content):
-                                    full_response += chunk + " "
-                                    time.sleep(0.01)
-                                    message_placeholder.markdown(full_response + "|")
-                                    
-                                # st.write_stream(stream_the_text(content))
+                                for word in stream_the_text(content):
+                                    full_response += word
+                                    message_placeholder.markdown(full_response)
                         else:
                             with st.chat_message(name='MEAI', avatar='🤖'):
                                 st.write(content)
+
+    if not st.session_state.initial_message_rendered:
+        with col1:
+            with st.chat_message(name='MEAI', avatar='🤖'):
+                message_placeholder = st.empty()
+                initial_message = "Based on your preferences, needs and constraints, here are the best destinations:\n1. Swiss Alps [95]\n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?"
+                full_response = ""
+                for word in stream_the_text(initial_message):
+                    full_response += word
+                    message_placeholder.markdown(full_response)
+                st.session_state.initial_message_rendered = True
+
 
 def fetch_flights_details(departure_city, destination_city, departure_date, return_date, max_results=8):
     try:
@@ -440,7 +426,7 @@ def fetch_flights_details(departure_city, destination_city, departure_date, retu
             departureDate=departure_date,
             returnDate=return_date,
             adults=1,
-            max= max_results
+            max=max_results
         ).data
 
         flights = []
@@ -466,6 +452,7 @@ def fetch_flights_details(departure_city, destination_city, departure_date, retu
         st.error(f"Error fetching flights: {error}")
         return []
 
+
 # Dictionary of city names and their IATA codes
 city_to_iata = {
     "New York": "JFK",
@@ -483,15 +470,18 @@ city_to_iata = {
     "Las Vegas": "LAS",
 }
 
+
 # Function to get IATA code from city name
 def get_iata_code(city_name):
     return city_to_iata.get(city_name, "Unknown")
+
 
 def convert_duration(iso_duration):
     duration_timedelta = isodate.parse_duration(iso_duration)
     hours = duration_timedelta.seconds // 3600
     minutes = (duration_timedelta.seconds % 3600) // 60
     return f"{hours} hours {minutes} minutes"
+
 
 with st.sidebar:
     st.markdown("## MEAI (Beta)")
