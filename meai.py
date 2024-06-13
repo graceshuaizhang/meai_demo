@@ -378,7 +378,7 @@ def results_page():
 
     if 'contents' not in st.session_state:
         st.session_state['contents'] = [("robot",
-                                         "Based on your preferences, needs and constraints, here are the best destinations:  \n1. Swiss Alps [95]  \n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?")
+                                         "Based on your preferences, needs and constraints, here are the best destinations:<br>1. Swiss Alps [95]<br>2. Canadian Rockies [83]<br>3. Patagonia [80].<br>Do you have any other questions?")
                                         ]
 
     with col1:
@@ -401,20 +401,24 @@ def results_page():
                                 full_response = ""
                                 for word in stream_the_text(content):
                                     full_response += word
-                                    message_placeholder.markdown(full_response)
+                                    message_placeholder.markdown(full_response, unsafe_allow_html=True)
                         else:
                             with st.chat_message(name='MEAI', avatar='🤖'):
-                                st.write(content)
+                                st.markdown(content, unsafe_allow_html=True)
 
     if not st.session_state.initial_message_rendered:
         with col1:
             with st.chat_message(name='MEAI', avatar='🤖'):
                 message_placeholder = st.empty()
-                initial_message = "Based on your preferences, needs and constraints, here are the best destinations:\n1. Swiss Alps [95]\n2. Canadian Rockies [83]\n3. Patagonia [80].\n\nDo you have any other questions?"
+                initial_message = """Based on your preferences, needs and constraints, here are the best destinations:<br>
+1. Swiss Alps [95]<br>
+2. Canadian Rockies [83]<br>
+3. Patagonia [80].<br><br>
+Do you have any other questions?"""
                 full_response = ""
                 for word in stream_the_text(initial_message):
                     full_response += word
-                    message_placeholder.markdown(full_response)
+                    message_placeholder.markdown(full_response, unsafe_allow_html=True)
                 st.session_state.initial_message_rendered = True
 
 
