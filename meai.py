@@ -256,7 +256,15 @@ def chat_content():
     st.session_state['contents'].append(('user', user_message))
     if user_message.strip().lower() == "why":
         st.session_state.show_video = True
-        chatbot_response = "Here's the reason："
+        chatbot_response = """
+        We think Swiss Alps suits your needs the most.:
+        <ol>
+            <li>You prefer not to self-drive. Switzerland has the best public transportation in the mountain area. You can easily go by without driving.</li>
+            <li>In the month you plan to travel, the weather in Swiss Alps is very pleasant, with plenty of sunny hours and few raining days.</li>
+            <li>There are many unique scenic  views in Swiss Alps, such as Matterhorn, Lauterbrunnen valley, Eiger Jungfrau and Monch. </li>
+        </ol>
+        <a href="https://www.tripadvisor.com/Tourism-g188077-Swiss_Alps-Vacations.html" target="_blank"> Click here</a> to see our detailed ratings about Swiss Alps as compared to other mountains.
+        """
     elif "plan" in user_message.lower():
         # Call google maps function to calculate the necessary route
         locations = ["Geneva", "Zermatt", "Interlaken", "Zurich"]
@@ -286,13 +294,13 @@ def generate_chatbot_response(user_input):
     ])
     for word in response.split():
         yield word + " "
-        time.sleep(0.05)
+        time.sleep(0.03)
 
 
 def stream_the_text(text):
     for word in text.split():
         yield word + " "
-        time.sleep(0.05)
+        time.sleep(0.03)
 
 
 def results_page():
@@ -377,9 +385,20 @@ def results_page():
                 st.markdown("</div>", unsafe_allow_html=True)
 
     if 'contents' not in st.session_state:
+        #st.session_state['contents'] = [("robot",
+        #                                 "Based on your preferences, needs and constraints, here are the best destinations:<br>1. Swiss Alps [95]<br>2. Canadian Rockies [83]<br>3. Patagonia [80].<br>Do you have any other questions?")
+        #                                ]
         st.session_state['contents'] = [("robot",
-                                         "Based on your preferences, needs and constraints, here are the best destinations:<br>1. Swiss Alps [95]<br>2. Canadian Rockies [83]<br>3. Patagonia [80].<br>Do you have any other questions?")
-                                        ]
+                                         """
+                                                 Based on your preferences, needs and constraints, here are the best destinations::
+                                                 <ol>
+                                                     <li>Swiss Alps</li>
+                                                     <li>Canadian Rockies</li>
+                                                     <li>Patagonia</li>
+                                                 </ol>
+                                                 Do you have any other questions?
+                                                 """
+                                         )]
 
     with col1:
         with st.container(border=True, height=850):
