@@ -257,7 +257,7 @@ def chat_content():
     if user_message.strip().lower() == "why":
         st.session_state.show_video = True
         chatbot_response = """
-        We think Swiss Alps suits your needs the most.:
+        We think Swiss Alps suits your needs the most.
         <ol>
             <li>You prefer not to self-drive. Switzerland has the best public transportation in the mountain area. You can easily go by without driving.</li>
             <li>In the month you plan to travel, the weather in Swiss Alps is very pleasant, with plenty of sunny hours and few raining days.</li>
@@ -390,7 +390,7 @@ def results_page():
         #                                ]
         st.session_state['contents'] = [("robot",
                                          """
-                                                 Based on your preferences, needs and constraints, here are the best destinations::
+                                                 Based on your preferences, needs and constraints, here are the best destinations:
                                                  <ol>
                                                      <li>Swiss Alps</li>
                                                      <li>Canadian Rockies</li>
