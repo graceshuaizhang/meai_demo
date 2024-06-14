@@ -97,8 +97,7 @@ def main_page():
     with col1:
         st.markdown('<div class="preference-heading">Your preference for this trip</div>', unsafe_allow_html=True)
 
-        #st.write("1. In which month will you travel and for how many days?")
-        st.markdown('<div class="question-heading">1. In which month will you travel and for how many days?</div>', unsafe_allow_html=True)
+        st.write("In which month will you travel and for how many days?")
         col3, col4 = st.columns(2)
         with col3:
             travel_month = st.selectbox("Month", [
@@ -108,61 +107,33 @@ def main_page():
         with col4:
             travel_days = st.number_input("Days", min_value=1, max_value=100, step=1)
 
-        st.markdown('<div class="question-heading">2. Do you prefer natural or cultural attractions?</div>',
-                    unsafe_allow_html=True)
-        #st.markdown('<div class="question-input">', unsafe_allow_html=True)
-        preference = st.selectbox("", ['natural', 'cultural'], label_visibility="collapsed")
-        #st.markdown('</div>', unsafe_allow_html=True)
+        preference = st.selectbox("Do you prefer natural or cultural attractions?", ["natural", "cultural"])
 
         if preference == "natural":
-            st.markdown('<div class="question-heading">3. What type of natural attractions do you prefer?</div>',
-                        unsafe_allow_html=True)
-            additional_preference = st.selectbox("",
+            additional_preference = st.selectbox("What type of natural attractions do you prefer?",
                                                  ["mountains", "beaches", "lakes/rivers/waterfalls",
-                                                  'forests', 'desserts', "others"],
-                                                 label_visibility="collapsed")
+                                                  'forests', 'desserts', "others"])
         elif preference == "cultural":
-            st.markdown('<div class="question-heading">3. What type of natural attractions do you prefer?</div>',
-                        unsafe_allow_html=True)
-            additional_preference = st.selectbox("",
+            additional_preference = st.selectbox("What type of cultural attractions do you prefer?",
                                                  ["historical", "museums", "ethnic neighbourhoods",
-                                                  "festivals/events", 'others'],
-                                                 label_visibility="collapsed")
+                                                  "festivals/events", 'others'])
 
-        st.markdown('<div class="question-heading">4. How much is your budget?</div>',
-                    unsafe_allow_html=True)
-        budget = st.number_input("", min_value=10, max_value=100000, step=1, label_visibility='collapsed')
-
-        st.markdown('<div class="question-heading">5. Do you prefer driving by yourself? <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rate from 0 to 10. 0: not prefer at all, 10: extremely prefer.</div>',
-                    unsafe_allow_html=True)
-        self_driving = st.number_input('',
-            min_value=0, max_value=10, step=1, label_visibility="collapsed", key='self_driving')
-
-        #st.markdown(
-        #    '<div class="question-heading">6. Are you sensitive to weather? <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rate from 0 to 10. 0: insensitive, 10: very sensitive.</div>',
-        #    unsafe_allow_html=True)
-        #weather = st.number_input('', min_value=0, max_value=10, step=1, label_visibility="collapsed")
-
-        st.markdown(
-            '<div class="question-heading">6. Are you sensitive to weather? <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rate from 0 to 10. 0: insensitive, 10: very sensitive.</div>',
-            unsafe_allow_html=True)
-        weather = st.number_input('', min_value=0, max_value=10, step=1, label_visibility="collapsed", key="weather")
-
-        st.markdown(
-            '<div class="question-heading">7. Do you prefer a tight or loose schedule? <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rate from 0 to 10. 0: very loose, 10：very tight.</div>',
-            unsafe_allow_html=True)
-        schedule = st.number_input('', min_value=0, max_value=10, step=1, label_visibility="collapsed", key="schedule")
+        budget = st.number_input("How much is your budget?", min_value=10, max_value=100000, step=1)
+        self_driving = st.number_input(
+            'Do you prefer self-driving?  \nRate from 0 to 10. 0: not prefer at all, 10: extremely prefer.',
+            min_value=0, max_value=10, step=1)
+        weather = st.number_input(
+            'Are you sensitive to weather?  \nRate from 0 to 10. 0: insensitive, 10: very sensitive.',
+            min_value=0, max_value=10, step=1)
+        schedule = st.number_input(
+            'Do you prefer a tight or loose schedule?  \nRate from 0 to 10. 0: very loose, 10：very tight.',
+            min_value=0, max_value=10, step=1)
 
         langs = ['English', 'Spanish', 'Chinese', 'Arabic', 'French', 'German', 'Hindi', 'Portuguese', 'Bengali',
                  'Russian', 'Indonesian', 'Turkish', 'Urdu', 'Japanese', 'Greek', 'Croatian', 'Korean', 'Telugu',
                  'Malay', 'Italian', 'Romansh', 'Dutch', 'Polish', 'Thai', 'Others']
 
-        st.markdown(
-            '<div class="question-heading">8. Which language do you speak?</div>',
-            unsafe_allow_html=True)
-        language = st.selectbox('', langs, label_visibility="collapsed")
-
-        #language = st.selectbox("8. Which language do you speak?", langs)
+        language = st.selectbox("Which language do you speak?", langs)
 
         st.markdown('<div class="submit-button">', unsafe_allow_html=True)
         if st.button("Submit", disabled=not (travel_month and travel_days and preference and additional_preference
