@@ -57,10 +57,11 @@ if 'duration_text' not in st.session_state:
     st.session_state.duration_text = ""
 if 'initial_message_rendered' not in st.session_state:
     st.session_state.initial_message_rendered = False
+if 'video_url' not in st.session_state:
+    st.session_state.video_url = "https://www.youtube.com/watch?v=Cd1Tc2UpnDY"  # Default video URL
 
 google_maps_api_key = st.secrets["GMAPS_API_KEY"]
 gmaps = googlemaps.Client(key=google_maps_api_key)
-
 
 # Function to display the main page
 def main_page():
@@ -254,8 +255,9 @@ def display_route_map(locations, all_leg_points):
 def chat_content():
     user_message = st.session_state.content
     st.session_state['contents'].append(('user', user_message))
-    if user_message.strip().lower() == "why":
+    if "why" in user_message.strip().lower():
         st.session_state.show_video = True
+        st.session_state.video_url = "https://www.youtube.com/watch?v=Cd1Tc2UpnDY"  # Video URL for "why"
         chatbot_response = """
         We think Swiss Alps suits your needs the most.
         <ol>
@@ -279,7 +281,18 @@ def chat_content():
         # Trigger the map display
         st.session_state.show_map = True
         st.session_state.show_video = False
-
+    elif 'any tips' in user_message.strip().lower():
+        st.session_state.show_video = True
+        st.session_state.video_url = "https://www.youtube.com/watch?v=fk0hodTKadI"  # Video URL for "any tips"
+        chatbot_response = """
+                Here are some useful tips about your trip to Swiss Alps.
+                <ol>
+                    <li>In Switzerland, there are various travel passes and half fare cards, which can save you a lot of cash. You can know more from the video on the right.</li>
+                    <li>...</li>
+                    <li>...</li>
+                </ol>
+                <a href="https://www.sbb.ch/en" target="_blank"> Click here</a> to see more about the Swiss train pass guide.
+                """
     else:
         chatbot_response = "This is what you sent: " + user_message
     st.session_state['contents'].append(('robot', chatbot_response))
@@ -359,7 +372,7 @@ def results_page():
         with st.container(border=True, height=850):
             st.markdown('<div class="explore-heading"> Recommendations </div>', unsafe_allow_html=True)
             if st.session_state.show_video:
-                st.video("https://www.youtube.com/watch?v=Cd1Tc2UpnDY")
+                st.video(st.session_state.video_url)  # Display video based on session state URL
             elif st.session_state.show_map and len(st.session_state.route_points) != 0 and len(st.session_state.trip_locations) != 0:
                 st.markdown('<div class="block-container">', unsafe_allow_html=True)
                 display_route_map(st.session_state.trip_locations, st.session_state.route_points)
@@ -385,19 +398,16 @@ def results_page():
                 st.markdown("</div>", unsafe_allow_html=True)
 
     if 'contents' not in st.session_state:
-        #st.session_state['contents'] = [("robot",
-        #                                 "Based on your preferences, needs and constraints, here are the best destinations:<br>1. Swiss Alps [95]<br>2. Canadian Rockies [83]<br>3. Patagonia [80].<br>Do you have any other questions?")
-        #                                ]
         st.session_state['contents'] = [("robot",
                                          """
-                                                 Based on your preferences, needs and constraints, here are the best destinations:
-                                                 <ol>
-                                                     <li>Swiss Alps</li>
-                                                     <li>Canadian Rockies</li>
-                                                     <li>Patagonia</li>
-                                                 </ol>
-                                                 Do you have any other questions?
-                                                 """
+                                         Based on your preferences, needs and constraints, here are the best destinations:
+                                         <ol>
+                                             <li>Swiss Alps</li>
+                                             <li>Canadian Rockies</li>
+                                             <li>Patagonia</li>
+                                         </ol>
+                                         Do you have any other questions?
+                                         """
                                          )]
 
     with col1:
