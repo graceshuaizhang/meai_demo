@@ -134,7 +134,7 @@ def main_page():
         #st.write("4. How much is your budget?")
         #budget = st.number_input("4.How much is your budget?", min_value=10, max_value=100000, step=1,
         #                         label_visibility='collapsed')
-        st.markdown('<div class="question-container"><div class="question-text">4. How much is your budget?</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="question-container"><div class="question-text">4. &nbsp;&nbsp;How much is your budget?</div></div>', unsafe_allow_html=True)
         #budget = st.number_input("", min_value=10, max_value=100000, step=1, label_visibility='collapsed')
         col5, col6 = st.columns(2)
         with col5:
