@@ -88,6 +88,17 @@ def main_page():
                 font-size: 24px;
                 margin-right: 10px;
             }
+            .question-container {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+            .question-text {
+                flex: 1;
+            }
+            .question-input {
+                flex: 1;
+            }
         </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     """, unsafe_allow_html=True)
@@ -120,11 +131,31 @@ def main_page():
             additional_preference = st.selectbox("3.What type of cultural attractions do you prefer?",
                                                  ["historical", "museums", "ethnic neighbourhoods",
                                                   "festivals/events", 'others'], label_visibility='collapsed')
-        st.write("4. How much is your budget?")
-        budget = st.number_input("4.How much is your budget?", min_value=10, max_value=100000, step=1,
-                                 label_visibility='collapsed')
+        #st.write("4. How much is your budget?")
+        #budget = st.number_input("4.How much is your budget?", min_value=10, max_value=100000, step=1,
+        #                         label_visibility='collapsed')
+        st.markdown('<div class="question-container"><div class="question-text">4. How much is your budget?</div></div>', unsafe_allow_html=True)
+        #budget = st.number_input("", min_value=10, max_value=100000, step=1, label_visibility='collapsed')
+        col5, col6 = st.columns(2)
+        with col5:
+            budget_amount = st.number_input("Amount", min_value=10, max_value=100000, step=1)
+        with col6:
+            currencies = [
+                "USD - United States Dollar",
+                "EUR - Euro",
+                "JPY - Japanese Yen",
+                "GBP - British Pound",
+                "AUD - Australian Dollar",
+                "CAD - Canadian Dollar",
+                "CHF - Swiss Franc",
+                "CNY - Chinese Yuan",
+                "SEK - Swedish Krona",
+                "NZD - New Zealand Dollar",
+                "KRW - Korean Won"
+                # Add more currencies as needed
+            ]
+            currency = st.selectbox("Currency", currencies)
 
-        #st.write("5. Do you prefer driving by yourself? <br>Rate from 0 to 10. 0: not prefer at all, 10: extremely prefer.")
         st.markdown("5. Do you prefer driving by yourself? <br>Rate from 0 to 10. 0: never prefer, 10: extremely prefer.", unsafe_allow_html=True)
         self_driving = st.number_input(
             '5.Do you prefer driving by yourself?  \nRate from 0 to 10. 0: not prefer at all, 10: extremely prefer.',
@@ -148,14 +179,14 @@ def main_page():
 
         st.markdown('<div class="submit-button">', unsafe_allow_html=True)
         if st.button("Submit", disabled=not (travel_month and travel_days and preference and additional_preference
-                                             and budget and (0 <= self_driving <= 10) and (0 <= weather <= 10)
+                                             and budget_amount and (0 <= self_driving <= 10) and (0 <= weather <= 10)
                                              and (0 <= schedule <= 10) and language)):
             st.session_state.page = "results"
             st.session_state.travel_month = travel_month
             st.session_state.travel_days = travel_days
             st.session_state.preference = preference
             st.session_state.additional_preference = additional_preference
-            st.session_state.budget = budget
+            st.session_state.budget = budget_amount
             st.session_state.self_driving = self_driving
             st.session_state.weather = weather
             st.session_state.schedule = schedule
