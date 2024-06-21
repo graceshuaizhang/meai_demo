@@ -74,7 +74,7 @@ def main_page():
                 margin-left: 260px !important;
             }
             .explore-heading {
-                padding-top: 20px;
+                padding-top: 80px;
                 text-align: center;
                 margin-left: 50px; /* Add space before the word "Explore" */
                 font-size: 20pt;
@@ -382,7 +382,7 @@ def results_page():
                 padding-right: 5rem;
             }
             .explore-heading {
-                padding-top: 20px;
+                padding-top: 120px;
                 text-align: center;
                 margin-left: 50px; /* Add space before the word "Explore" */
                 font-size: 20pt;
