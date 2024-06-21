@@ -446,9 +446,9 @@ def results_page():
                                          """
                                          Based on your preferences, needs and constraints, here are the best destinations:
                                          <ol>
-                                             <li>Swiss Alps</li>
-                                             <li>Canadian Rockies</li>
-                                             <li>Patagonia</li>
+                                             <li>Swiss Alps [95]</li>
+                                             <li>Canadian Rockies [83]</li>
+                                             <li>Patagonia [80]</li>
                                          </ol>
                                          Do you have any other questions?
                                          """
