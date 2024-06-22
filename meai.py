@@ -7,9 +7,10 @@ from streamlit_folium import folium_static
 import googlemaps
 import re
 from amadeus import Client, ResponseError
-from datetime import date, timedelta
-import pandas as pd
+# from datetime import date, timedelta
+# import pandas as pd
 import isodate
+from PIL import Image
 
 # Set up the page layout
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
@@ -74,7 +75,7 @@ def main_page():
                 margin-left: 260px !important;
             }
             .explore-heading {
-                padding-top: 80px;
+                padding-top: 5px;
                 text-align: center;
                 margin-left: 50px; /* Add space before the word "Explore" */
                 font-size: 20pt;
@@ -106,102 +107,103 @@ def main_page():
     col1, col2 = st.columns([3, 3])
 
     with col1:
-        st.markdown('<div class="preference-heading">Your preference for this trip</div>', unsafe_allow_html=True)
+        with st.container(border=False, height=850):
+            st.markdown('<div class="preference-heading">Your preference for this trip</div>', unsafe_allow_html=True)
 
-        st.write("1. In which month will you travel and for how many days?")
-        col1a, col1b = st.columns(2)
-        with col1a:
-            travel_month = st.selectbox("Month", [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
-            ])
-        with col1b:
-            travel_days = st.number_input("Days", min_value=1, max_value=100, step=1)
+            st.write("1. In which month will you travel and for how many days?")
+            col1a, col1b = st.columns(2)
+            with col1a:
+                travel_month = st.selectbox("Month", [
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+                ])
+            with col1b:
+                travel_days = st.number_input("Days", min_value=1, max_value=100, step=1)
 
-        st.write("2. Do you prefer natural or cultural attractions?")
-        col2a, col2b = st.columns(2)
-        with col2a:
-            preference = st.selectbox("2.Do you prefer natural or cultural attractions?", ["natural", "cultural"], label_visibility='collapsed')
-        with col2b:
-            if preference == "natural":
-                #st.write("3. What type of natural attractions do you prefer?")
-                additional_preference = st.selectbox("3.What type of natural attractions do you prefer?",
-                                                 ["mountains", "beaches", "lakes/rivers/waterfalls",
-                                                  'forests', 'desserts', "others"], label_visibility='collapsed')
-            elif preference == "cultural":
-                #st.write("3. What type of cultural attractions do you prefer?")
-                additional_preference = st.selectbox("3.What type of cultural attractions do you prefer?",
-                                                 ["historical", "museums", "ethnic neighbourhoods",
-                                                  "festivals/events", 'others'], label_visibility='collapsed')
-        #st.write("4. How much is your budget?")
-        #budget = st.number_input("4.How much is your budget?", min_value=10, max_value=100000, step=1,
-        #                         label_visibility='collapsed')
-        st.markdown('<div class="question-container"><div class="question-text">3. &nbsp;&nbsp;How much is your budget?</div></div>', unsafe_allow_html=True)
-        #budget = st.number_input("", min_value=10, max_value=100000, step=1, label_visibility='collapsed')
-        col3a, col3b = st.columns(2)
-        with col3a:
-            budget_amount = st.number_input("Amount", min_value=10, max_value=100000, step=1)
-        with col3b:
-            currencies = [
-                "USD - United States Dollar",
-                "EUR - Euro",
-                "JPY - Japanese Yen",
-                "GBP - British Pound",
-                "AUD - Australian Dollar",
-                "CAD - Canadian Dollar",
-                "CHF - Swiss Franc",
-                "CNY - Chinese Yuan",
-                "SEK - Swedish Krona",
-                "NZD - New Zealand Dollar",
-                "KRW - Korean Won"
-                # Add more currencies as needed
-            ]
-            currency = st.selectbox("Currency", currencies)
+            st.write("2. Do you prefer natural or cultural attractions?")
+            col2a, col2b = st.columns(2)
+            with col2a:
+                preference = st.selectbox("2.Do you prefer natural or cultural attractions?", ["natural", "cultural"], label_visibility='collapsed')
+            with col2b:
+                if preference == "natural":
+                    #st.write("3. What type of natural attractions do you prefer?")
+                    additional_preference = st.selectbox("3.What type of natural attractions do you prefer?",
+                                                    ["mountains", "beaches", "lakes/rivers/waterfalls",
+                                                    'forests', 'desserts', "others"], label_visibility='collapsed')
+                elif preference == "cultural":
+                    #st.write("3. What type of cultural attractions do you prefer?")
+                    additional_preference = st.selectbox("3.What type of cultural attractions do you prefer?",
+                                                    ["historical", "museums", "ethnic neighbourhoods",
+                                                    "festivals/events", 'others'], label_visibility='collapsed')
+            #st.write("4. How much is your budget?")
+            #budget = st.number_input("4.How much is your budget?", min_value=10, max_value=100000, step=1,
+            #                         label_visibility='collapsed')
+            st.markdown('<div class="question-container"><div class="question-text">3. &nbsp;&nbsp;How much is your budget?</div></div>', unsafe_allow_html=True)
+            #budget = st.number_input("", min_value=10, max_value=100000, step=1, label_visibility='collapsed')
+            col3a, col3b = st.columns(2)
+            with col3a:
+                budget_amount = st.number_input("Amount", min_value=10, max_value=100000, step=1)
+            with col3b:
+                currencies = [
+                    "USD - United States Dollar",
+                    "EUR - Euro",
+                    "JPY - Japanese Yen",
+                    "GBP - British Pound",
+                    "AUD - Australian Dollar",
+                    "CAD - Canadian Dollar",
+                    "CHF - Swiss Franc",
+                    "CNY - Chinese Yuan",
+                    "SEK - Swedish Krona",
+                    "NZD - New Zealand Dollar",
+                    "KRW - Korean Won"
+                    # Add more currencies as needed
+                ]
+                currency = st.selectbox("Currency", currencies)
 
-        st.markdown("4. Do you prefer driving by yourself? <br>Rate from 0 to 10. 0: never prefer, 10: extremely prefer.", unsafe_allow_html=True)
-        self_driving = st.number_input(
-            '4.Do you prefer driving by yourself?  \nRate from 0 to 10. 0: not prefer at all, 10: extremely prefer.',
-            min_value=0, max_value=10, step=1, label_visibility='collapsed')
+            st.markdown("4. Do you prefer driving by yourself? <br>Rate from 0 to 10. 0: never prefer, 10: extremely prefer.", unsafe_allow_html=True)
+            self_driving = st.number_input(
+                '4.Do you prefer driving by yourself?  \nRate from 0 to 10. 0: not prefer at all, 10: extremely prefer.',
+                min_value=0, max_value=10, step=1, label_visibility='collapsed')
 
-        st.write("5. Are you sensitive to weather?  \nRate from 0 to 10. 0: insensitive, 10: very sensitive.")
-        weather = st.number_input(
-            '5.Are you sensitive to weather?  \nRate from 0 to 10. 0: insensitive, 10: very sensitive.',
-            min_value=0, max_value=10, step=1, label_visibility='collapsed')
+            st.write("5. Are you sensitive to weather?  \nRate from 0 to 10. 0: insensitive, 10: very sensitive.")
+            weather = st.number_input(
+                '5.Are you sensitive to weather?  \nRate from 0 to 10. 0: insensitive, 10: very sensitive.',
+                min_value=0, max_value=10, step=1, label_visibility='collapsed')
 
-        st.markdown("6. Do you prefer a tight or loose schedule?  \nRate from 0 to 10. 0: very loose, 10：very tight.", unsafe_allow_html=True)
-        schedule = st.number_input(
-            '6.Do you prefer a tight or loose schedule?  \nRate from 0 to 10. 0: very loose, 10：very tight.',
-            min_value=0, max_value=10, step=1, label_visibility='collapsed')
+            st.markdown("6. Do you prefer a tight or loose schedule?  \nRate from 0 to 10. 0: very loose, 10：very tight.", unsafe_allow_html=True)
+            schedule = st.number_input(
+                '6.Do you prefer a tight or loose schedule?  \nRate from 0 to 10. 0: very loose, 10：very tight.',
+                min_value=0, max_value=10, step=1, label_visibility='collapsed')
 
-        st.markdown("7. Which language do you speak?", unsafe_allow_html=True)
-        langs = ['English', 'Spanish', 'Chinese', 'Arabic', 'French', 'German', 'Hindi', 'Portuguese', 'Bengali',
-                 'Russian', 'Indonesian', 'Turkish', 'Urdu', 'Japanese', 'Greek', 'Croatian', 'Korean', 'Telugu',
-                 'Malay', 'Italian', 'Romansh', 'Dutch', 'Polish', 'Thai', 'Others']
-        language = st.selectbox("7.Which language do you speak?", langs, label_visibility='collapsed')
+            st.markdown("7. Which language do you speak?", unsafe_allow_html=True)
+            langs = ['English', 'Spanish', 'Chinese', 'Arabic', 'French', 'German', 'Hindi', 'Portuguese', 'Bengali',
+                    'Russian', 'Indonesian', 'Turkish', 'Urdu', 'Japanese', 'Greek', 'Croatian', 'Korean', 'Telugu',
+                    'Malay', 'Italian', 'Romansh', 'Dutch', 'Polish', 'Thai', 'Others']
+            language = st.selectbox("7.Which language do you speak?", langs, label_visibility='collapsed')
 
-        st.markdown('<div class="submit-button">', unsafe_allow_html=True)
-        if st.button("Submit", disabled=not (travel_month and travel_days and preference and additional_preference
-                                             and budget_amount and (0 <= self_driving <= 10) and (0 <= weather <= 10)
-                                             and (0 <= schedule <= 10) and language)):
-            st.session_state.page = "results"
-            st.session_state.travel_month = travel_month
-            st.session_state.travel_days = travel_days
-            st.session_state.preference = preference
-            st.session_state.additional_preference = additional_preference
-            st.session_state.budget = budget_amount
-            st.session_state.self_driving = self_driving
-            st.session_state.weather = weather
-            st.session_state.schedule = schedule
-            st.session_state.language = language
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('<div class="submit-button">', unsafe_allow_html=True)
+            if st.button("Submit", disabled=not (travel_month and travel_days and preference and additional_preference
+                                                and budget_amount and (0 <= self_driving <= 10) and (0 <= weather <= 10)
+                                                and (0 <= schedule <= 10) and language)):
+                st.session_state.page = "results"
+                st.session_state.travel_month = travel_month
+                st.session_state.travel_days = travel_days
+                st.session_state.preference = preference
+                st.session_state.additional_preference = additional_preference
+                st.session_state.budget = budget_amount
+                st.session_state.self_driving = self_driving
+                st.session_state.weather = weather
+                st.session_state.schedule = schedule
+                st.session_state.language = language
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
         st.markdown('<div class="explore-heading"> Explore destinations</div>', unsafe_allow_html=True)
         st.markdown("""
             <style>
             .column-padding {
-                padding-top: 50px !important;
+                padding-top: 10px !important;
             }
             .main-image {
                 width: 100%;
@@ -215,25 +217,60 @@ def main_page():
                 justify-content: space-between;
                 gap: 20px;
             }
+            .fit-image {
+                display: block;
+                max-width: 10%;
+                max-height: 10%;
+                transform-origin: 0 0;
+                transform: scale(10);
+            }
+                
             .small-image {
                 width: 48%;
-                height: 200px;
+                height: auto;
                 object-fit: cover;
                 border-radius: 10px;
             }
             </style>
         """, unsafe_allow_html=True)
+        
         st.markdown('<div class="column-padding">', unsafe_allow_html=True)
-        st.image("images/pic1.jpeg", caption="Bora Bora, French Polynesia", use_column_width=True, output_format="auto")
+        img = Image.open("images/pic1.jpeg")
+        nimage = img.resize((500, 200))
+        st.image(nimage, caption="Bora Bora, French Polynesia", use_column_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
+        # using markdown to set the image size basedon the viewport height
+        # with st.container(height=400, border=False):
+        #     st.markdown(
+        #         '<img src="app/static/images/pic1.jpeg" style="max-height: 35vh; width: auto;">',
+        #         unsafe_allow_html=True
+        #     )
+        # st.markdown("Bora Bora, French Polynesia", unsafe_allow_html=True)
 
         st.markdown("<div class='small-images-container'>", unsafe_allow_html=True)
         col3, col4 = st.columns(2)
         with col3:
-            st.image("images/pic2.jpg", caption="Alpamayo peak, Peruvian Andes", use_column_width=True)
+            img = Image.open("images/pic2.jpg")
+            nimage = img.resize((500, 300)) # high = 300, width = 500
+            st.image(nimage, caption="Alpamayo peak, Peruvian Andes", use_column_width=True)
         with col4:
-            st.image("images/pic3.jpeg", caption="Moreno Glacier, Argentina Patagonia", use_column_width=True)
+            img = Image.open("images/pic3.jpeg")
+            nimage = img.resize((500, 300))
+            st.image(nimage, caption="Moreno Glacier, Argentina Patagonia", use_column_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
+        # using markdown to set the image size based on the viewport height
+        # with col3:
+        #     with st.container(height=300, border=False):
+        #         st.markdown(
+        #             '<img src="app/static/images/pic2.jpg" style="max-height: 30vh; width: auto;">',
+        #             unsafe_allow_html=True
+        #         )
+        # with col4:
+        #     with st.container(height=300, border=False):
+        #         st.markdown(
+        #             '<img src="app/static/images/pic3.jpeg" style="max-height: 30vh; width: auto;">',
+        #             unsafe_allow_html=True
+        #         )
 
 
 def get_location_coordinates(location_name):
@@ -313,7 +350,7 @@ def chat_content():
         """
     elif "plan" in user_message.lower():
         # Call google maps function to calculate the necessary route
-        locations = ["Geneva", "Zermatt", "Interlaken", "Zurich"]
+        locations = ["Geneva", "Zermatt", "Interlaken", "Jungfrau", "Schilthorn", "Zurich"]
         # Get the route information
         route_points, leg_durations, duration_text = calculate_route_info(locations)
         st.session_state.trip_locations = locations
@@ -321,7 +358,7 @@ def chat_content():
         st.session_state.leg_durations = leg_durations
         st.session_state.duration_text = duration_text
 
-        chatbot_response = " Please find the travel plan on the right panel. We can help you book the reservations here!"
+        chatbot_response = " Please find the travel plan on the right. We can help you book the reservations here!"
         # Trigger the map display
         st.session_state.show_map = True
         st.session_state.show_video = False
@@ -332,7 +369,8 @@ def chat_content():
                 Here are some useful tips about your trip to Swiss Alps.
                 <ol>
                     <li>In Switzerland, there are various travel passes and half fare cards, which can save you a lot of cash. You can know more from the video on the right.</li>
-                    
+                    <li>...</li>
+                    <li>...</li>
                 </ol>
                 <a href="https://www.sbb.ch/en" target="_blank"> Click here</a> to see more about the Swiss train pass guide.
                 """
@@ -381,7 +419,7 @@ def results_page():
                 padding-right: 5rem;
             }
             .explore-heading {
-                padding-top: 120px;
+                padding-top: 20px; /* reduce the top padding */
                 text-align: center;
                 margin-left: 50px; /* Add space before the word "Explore" */
                 font-size: 20pt;
@@ -420,7 +458,7 @@ def results_page():
                 st.markdown('<div class="block-container">', unsafe_allow_html=True)
                 display_route_map(st.session_state.trip_locations, st.session_state.route_points)
                 st.write(
-                    f"**Here is the route for your trip:** {st.session_state.trip_locations}  \n"
+                    f"**Here is the route for your trip: {', '.join(st.session_state.trip_locations)}**  \n"
                     f"**The total duration of the trip is:** {st.session_state.duration_text}  \n" +
                     '  \n'.join([
                         f"**Day {i + 1}: From {st.session_state.trip_locations[i]} to {st.session_state.trip_locations[i + 1]}, trip time is: {st.session_state.leg_durations[i]}**"
