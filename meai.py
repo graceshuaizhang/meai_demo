@@ -321,7 +321,7 @@ def chat_content():
         st.session_state.leg_durations = leg_durations
         st.session_state.duration_text = duration_text
 
-        chatbot_response = " Please find the travel plan on the right. We can help you book the reservations here!"
+        chatbot_response = " Please find the travel plan on the right panel. We can help you book the reservations here!"
         # Trigger the map display
         st.session_state.show_map = True
         st.session_state.show_video = False
