@@ -236,7 +236,7 @@ def main_page():
         
         st.markdown('<div class="column-padding">', unsafe_allow_html=True)
         img = Image.open("images/pic1.jpeg")
-        nimage = img.resize((500, 200))
+        nimage = img.resize((500, 400))
         st.image(nimage, caption="Bora Bora, French Polynesia", use_column_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
         # using markdown to set the image size basedon the viewport height
@@ -251,11 +251,11 @@ def main_page():
         col3, col4 = st.columns(2)
         with col3:
             img = Image.open("images/pic2.jpg")
-            nimage = img.resize((500, 300)) # high = 300, width = 500
+            nimage = img.resize((500, 400)) # high = 300, width = 500
             st.image(nimage, caption="Alpamayo peak, Peruvian Andes", use_column_width=True)
         with col4:
             img = Image.open("images/pic3.jpeg")
-            nimage = img.resize((500, 300))
+            nimage = img.resize((500, 400))
             st.image(nimage, caption="Moreno Glacier, Argentina Patagonia", use_column_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
         # using markdown to set the image size based on the viewport height
@@ -369,8 +369,7 @@ def chat_content():
                 Here are some useful tips about your trip to Swiss Alps.
                 <ol>
                     <li>In Switzerland, there are various travel passes and half fare cards, which can save you a lot of cash. You can know more from the video on the right.</li>
-                    <li>...</li>
-                    <li>...</li>
+            
                 </ol>
                 <a href="https://www.sbb.ch/en" target="_blank"> Click here</a> to see more about the Swiss train pass guide.
                 """
