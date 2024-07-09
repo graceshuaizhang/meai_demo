@@ -456,7 +456,8 @@ def chat_content():
                 Here are some useful tips about your trip to Swiss Alps.
                 <ol>
                     <li>In Switzerland, there are various travel passes and half fare cards, which can save you a lot of cash. You can know more from the video on the right.</li>
-            
+                    <li>...</li>
+                    <li>...</li>
                 </ol>
                 <a href="https://www.sbb.ch/en" target="_blank"> Click here</a> to see more about the Swiss train pass guide.
                 """
