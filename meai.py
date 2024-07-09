@@ -6,7 +6,9 @@ import folium
 from streamlit_folium import folium_static
 import googlemaps
 import re
-from amadeus import Client, ResponseError
+# from amadeus import Client, ResponseError
+import io
+import base64
 # from datetime import date, timedelta
 # import pandas as pd
 import isodate
@@ -16,10 +18,10 @@ from PIL import Image
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
 # Initialize Amadeus API
-amadeus = Client(
-    client_id=st.secrets["AMADEUS_API_KEY"],
-    client_secret=st.secrets["AMADEUS_API_SECRET"]
-)
+# amadeus = Client(
+#     client_id=st.secrets["AMADEUS_API_KEY"],
+#     client_secret=st.secrets["AMADEUS_API_SECRET"]
+# )
 
 # Initialize session state variables
 if 'travel_month' not in st.session_state:
@@ -64,6 +66,16 @@ if 'video_url' not in st.session_state:
 google_maps_api_key = st.secrets["GMAPS_API_KEY"]
 gmaps = googlemaps.Client(key=google_maps_api_key)
 
+# Save image to a buffer
+# Function to convert image to base64
+def image_to_base64(image_path):
+    buffer = io.BytesIO()
+    with Image.open(image_path) as image:
+        image.save(buffer, format="JPEG")
+        buffer.seek(0)
+        return base64.b64encode(buffer.getvalue()).decode()
+
+
 # Function to display the main page
 def main_page():
     st.markdown("""
@@ -99,6 +111,58 @@ def main_page():
             }
             .question-input {
                 flex: 1;
+            }
+            .responsive-largeimg {
+                max-width: 600px;
+                min-width: 300px;
+                height: auto;
+                color: black;
+            }
+            /* Extra small devices (phones, 600px and down) */
+            @media only screen and (max-width: 600px) {
+                .responsive-largeimg {width: 100%; height: auto; background: red;}
+            }
+            /* Small devices (portrait tablets and large phones, 600px and up) */
+            @media only screen and (min-width: 600px) {
+                .responsive-largeimg {width: 75%; height: auto; background: blue;}
+            }
+            /* Medium devices (landscape tablets, 768px and up) */
+            @media only screen and (min-width: 768px) {
+                .responsive-largeimg {width: 50%;    height: auto; background: yellow;}
+            }
+            /* Large devices (laptops/desktops, 992px and up) */
+            @media only screen and (min-width: 992px) {
+                .responsive-largeimg {width: 100%;   height: auto; background: green;}
+            }
+            /* Extra large devices (large laptops and desktops, 1200px and up) */
+            @media only screen and (min-width: 1200px) {
+                .responsive-largeimg {width: 100%;  height: auto; background: orange;}
+            }
+            .responsive-small-img {
+                max-width: 400px;
+                min-width: 100px;
+                height: auto;
+                color: red;
+            }
+            /* Extra small devices (phones, 600px and down) */
+            @media only screen and (max-width: 600px) {
+                .responsive-small-img {width: 50%; height: auto; }
+            }
+            /* Small devices (portrait tablets and large phones, 600px and up) */
+            @media only screen and (min-width: 600px) {
+                .responsive-small-img {width: 75%; height: auto; background: green;}
+            }
+            /* Medium devices (landscape tablets, 768px and up) */
+            @media only screen and (min-width: 768px) {
+                .responsive-small-img {width: 75%;    height: auto;}
+            }
+            /* Large devices (laptops/desktops, 992px and up) */
+            @media only screen and (min-width: 992px) {
+                .responsive-small-img {width: 75%;   height: auto;}
+            }
+            /* Extra large devices (large laptops and desktops, 1200px and up) */
+            @media only screen and (min-width: 1200px) {
+                .responsive-small-img {width: 100%;  height: auto;}
             }
         </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -234,11 +298,19 @@ def main_page():
             </style>
         """, unsafe_allow_html=True)
         
-        st.markdown('<div class="column-padding">', unsafe_allow_html=True)
-        img = Image.open("images/pic1.jpeg")
-        nimage = img.resize((500, 200))
-        st.image(nimage, caption="Bora Bora, French Polynesia", use_column_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        # st.markdown('<div class="column-padding">', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div style="text-align: center;">
+                <img src="data:image/jpeg;base64,{image_to_base64("images/pic1.jpeg")}" class="responsive-largeimg">
+                <div class="responsive-largeimg">Bora Bora, French Polynesia</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        
+        # st.image(nimage, caption="Bora Bora, French Polynesia", use_column_width=True)
+        # st.markdown('</div>', unsafe_allow_html=True)
         # using markdown to set the image size basedon the viewport height
         # with st.container(height=400, border=False):
         #     st.markdown(
@@ -251,12 +323,27 @@ def main_page():
         col3, col4 = st.columns(2)
         with col3:
             img = Image.open("images/pic2.jpg")
-            nimage = img.resize((500, 300)) # high = 300, width = 500
-            st.image(nimage, caption="Alpamayo peak, Peruvian Andes", use_column_width=True)
+            st.markdown(
+            f"""
+            <div style="text-align: center;">
+                <img src="data:image/jpeg;base64,{image_to_base64("images/pic2.jpg")}" class="responsive-small-img">
+                <div class="responsive-largeimg">Bora Bora, French Polynesia</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         with col4:
             img = Image.open("images/pic3.jpeg")
-            nimage = img.resize((500, 300))
-            st.image(nimage, caption="Moreno Glacier, Argentina Patagonia", use_column_width=True)
+            st.markdown(
+            f"""
+            <div style="text-align: center;">
+                <img src="data:image/jpeg;base64,{image_to_base64("images/pic3.jpeg")}" class="responsive-small-img">
+                <div class="caption">Bora Bora, French Polynesia</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         st.markdown("</div>", unsafe_allow_html=True)
         # using markdown to set the image size based on the viewport height
         # with col3:
@@ -350,7 +437,7 @@ def chat_content():
         """
     elif "plan" in user_message.lower():
         # Call google maps function to calculate the necessary route
-        locations = ["Geneva", "Zermatt", "Interlaken", "Jungfrau", "Schilthorn", "Zurich"]
+        locations = ["Geneva", "Zermatt", "Interlaken", "Schilthorn", "Zurich"]
         # Get the route information
         route_points, leg_durations, duration_text = calculate_route_info(locations)
         st.session_state.trip_locations = locations
@@ -532,39 +619,39 @@ Do you have any other questions?"""
                 st.session_state.initial_message_rendered = True
 
 
-def fetch_flights_details(departure_city, destination_city, departure_date, return_date, max_results=8):
-    try:
-        response = amadeus.shopping.flight_offers_search.get(
-            originLocationCode=departure_city,
-            destinationLocationCode=destination_city,
-            departureDate=departure_date,
-            returnDate=return_date,
-            adults=1,
-            max=max_results
-        ).data
+# def fetch_flights_details(departure_city, destination_city, departure_date, return_date, max_results=8):
+#     try:
+#         response = amadeus.shopping.flight_offers_search.get(
+#             originLocationCode=departure_city,
+#             destinationLocationCode=destination_city,
+#             departureDate=departure_date,
+#             returnDate=return_date,
+#             adults=1,
+#             max=max_results
+#         ).data
 
-        flights = []
-        for offer in response:
-            segments = offer['itineraries'][0]['segments']
-            total_duration = offer['itineraries'][0]['duration']
-            flight_info = {
-                'id': offer['id'],
-                'price': offer['price']['total'],
-                'currency': offer['price']['currency'],
-                'total_duration': convert_duration(total_duration),
-                'airlines': ', '.join({segment['carrierCode'] for segment in segments}),
-                'departure_time': segments[0]['departure']['at'],
-                'arrival_time': segments[-1]['arrival']['at'],
-                'stops': len(segments) - 1,
-                'aircraft': ', '.join({segment.get('aircraft', {}).get('code', 'N/A') for segment in segments}),
-                'booking_classes': ', '.join({segment.get('cabin', {}).get('code', 'N/A') for segment in segments})
-            }
-            flights.append(flight_info)
-        return flights
+#         flights = []
+#         for offer in response:
+#             segments = offer['itineraries'][0]['segments']
+#             total_duration = offer['itineraries'][0]['duration']
+#             flight_info = {
+#                 'id': offer['id'],
+#                 'price': offer['price']['total'],
+#                 'currency': offer['price']['currency'],
+#                 'total_duration': convert_duration(total_duration),
+#                 'airlines': ', '.join({segment['carrierCode'] for segment in segments}),
+#                 'departure_time': segments[0]['departure']['at'],
+#                 'arrival_time': segments[-1]['arrival']['at'],
+#                 'stops': len(segments) - 1,
+#                 'aircraft': ', '.join({segment.get('aircraft', {}).get('code', 'N/A') for segment in segments}),
+#                 'booking_classes': ', '.join({segment.get('cabin', {}).get('code', 'N/A') for segment in segments})
+#             }
+#             flights.append(flight_info)
+#         return flights
 
-    except ResponseError as error:
-        st.error(f"Error fetching flights: {error}")
-        return []
+#     except ResponseError as error:
+#         st.error(f"Error fetching flights: {error}")
+#         return []
 
 
 # Dictionary of city names and their IATA codes
